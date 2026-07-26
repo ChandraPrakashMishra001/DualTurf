@@ -11,7 +11,7 @@ import styles from './Header.module.css'
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
-  if (pathname === '/coming-soon') return null
+  if (pathname === '/coming-soon' || pathname === '/') return null
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
