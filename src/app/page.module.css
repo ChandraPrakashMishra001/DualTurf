@@ -1,0 +1,643 @@
+.homeContainer {
+  width: 100%;
+  overflow-x: hidden;
+  background-color: var(--bg-color);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  background-color: var(--accent-color);
+  color: #000000;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: 0 10px 25px rgba(196, 255, 61, 0.4);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Hero Section */
+.heroSection {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 700px;
+  max-height: 1000px;
+  background-color: #000000;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: 75px;
+}
+
+.heroSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 5rem 4rem;
+}
+
+@media (max-width: 768px) {
+  .heroSlide {
+    padding: 3rem 1.5rem;
+  }
+}
+
+.activeSlide {
+  opacity: 1;
+  z-index: 1;
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.05);
+  transition: transform 6s ease;
+  filter: brightness(1.22) contrast(1.05);
+}
+
+.activeSlide .heroBg {
+  transform: scale(1);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0.05) 0%,
+      rgba(10, 10, 10, 0.4) 100%
+    ),
+    linear-gradient(90deg, rgba(10, 10, 10, 0.45) 0%, transparent 60%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: left;
+  max-width: 850px;
+  padding: 0;
+}
+
+.heroContent h1 {
+  font-size: clamp(2.5rem, 5.5vw, 5rem);
+  line-height: 0.95;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.05em;
+}
+
+.heroSubtitle {
+  font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.heroIndicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.indicator {
+  width: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: var(--transition-smooth);
+}
+
+.activeIndicator {
+  width: 36px;
+  background-color: var(--accent-color);
+}
+
+/* Hero Bottom Left Badge */
+.heroBottomLeft {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 2.5rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.heroBottomLeft span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(0.9rem, 2vw, 1.35rem);
+  letter-spacing: 0.18em;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  background: rgba(10, 10, 10, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.6rem 1.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(196, 255, 61, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(196, 255, 61, 0.18);
+}
+
+@media (max-width: 768px) {
+  .heroBottomLeft {
+    bottom: 1.5rem;
+    left: 1.25rem;
+  }
+  .heroBottomLeft span {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.9rem;
+  }
+}
+
+/* Marquee Section */
+.marqueeSection {
+  background-color: #111111;
+  border-y: 1px solid var(--border-color);
+  padding: 1rem 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marqueeItem {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  letter-spacing: 0.15em;
+  margin: 0 2rem;
+  color: var(--text-primary);
+}
+
+/* Common Section */
+.section {
+  padding: 6rem 0;
+}
+
+.darkBg {
+  background-color: #050505;
+}
+
+/* Rotated Side Text Decorative Typography */
+.sideTextSection {
+  position: relative;
+  overflow: visible;
+  padding-top: 2rem;
+}
+
+/* Horizontal "2026 - 2027 SEASON" across the top */
+.seasonHeader {
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  text-align: center;
+  letter-spacing: 0.2em;
+  margin-bottom: 3rem;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+}
+
+/* "New Season" on the left, rotated bottom-to-top */
+.sideTextLeft {
+  position: absolute;
+  left: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: center center;
+  z-index: 5;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.sideTextLeft span {
+  font-size: clamp(2rem, 3.5vw, 3.5rem);
+  letter-spacing: 0.18em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
+/* "KITS" on the right, rotated top-to-bottom */
+.sideTextRight {
+  position: absolute;
+  right: -1.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  transform-origin: center center;
+  z-index: 5;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.sideTextRight span {
+  font-size: clamp(3rem, 6vw, 6rem);
+  letter-spacing: 0.4em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .sideTextLeft,
+  .sideTextRight {
+    display: none;
+  }
+  .seasonHeader {
+    font-size: 1.8rem;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.12em;
+  }
+}
+
+.sectionTitle {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  text-align: center;
+  margin-bottom: 4rem;
+  letter-spacing: 0.05em;
+}
+
+/* Category Grid */
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .categoryGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .categoryGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.categoryCard {
+  position: relative;
+  aspect-ratio: 3/4;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: block;
+  cursor: pointer;
+  /* GPU-composited for smooth hover glow */
+  will-change: transform;
+}
+
+.cardBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.cardGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(10, 10, 10, 0.95) 0%,
+    rgba(10, 10, 10, 0.2) 60%,
+    transparent 100%
+  );
+}
+
+.categoryInfo {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 2;
+}
+
+.categoryInfo h3 {
+  font-size: 1.75rem;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.arrowCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 900;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: var(--transition-smooth);
+}
+
+.categoryCard:hover .arrowCircle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Product Grid */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .productGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.productCard {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.productImgWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  display: block;
+}
+
+.newBadge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: var(--accent-color);
+  color: #000000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.1em;
+  z-index: 2;
+}
+
+.quickAddBtn {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: #000000;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: var(--transition-smooth);
+}
+
+.productCard:hover .quickAddBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.quickAddBtn:hover {
+  background-color: var(--accent-hover);
+  transform: scale(1.1) !important;
+}
+
+.productMeta {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.productTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.originalPrice {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  text-decoration: line-through;
+}
+
+/* International Kits Slider */
+.intlSlider {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.intlSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.activeIntlSlide {
+  opacity: 1;
+  z-index: 1;
+}
+
+.intlBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.intlOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(10, 10, 10, 0.9) 0%,
+    rgba(10, 10, 10, 0.4) 60%,
+    transparent 100%
+  );
+}
+
+.intlContent {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem;
+  max-width: 600px;
+}
+
+.intlContent h3 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.intlPrice {
+  font-size: 1.5rem;
+  color: var(--accent-color);
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.sliderArrows {
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+  z-index: 10;
+  display: flex;
+  gap: 1rem;
+}
+
+.sliderArrows button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background-color: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.sliderArrows button:hover {
+  background-color: var(--accent-color);
+  color: #000000;
+  border-color: var(--accent-color);
+}
+
+/* Brand Story & Stats Section */
+.brandSection {
+  position: relative;
+  overflow: hidden;
+  min-height: 480px;
+  background-color: #0a0a0a;
+  background-image: linear-gradient(
+      rgba(10, 10, 10, 0.6),
+      rgba(10, 10, 10, 0.75)
+    ),
+    url('/images/ftt.jpg');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 8rem 0;
+}
+
+.brandContainer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Brand Section & Stats */
+.brandBox {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.brandBox h2 {
+  font-size: clamp(4rem, 9vw, 8rem);
+  margin-bottom: 2rem;
+}
+
+.brandParagraph {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: 4rem;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 2rem;
+  }
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statNumber {
+  font-family: var(--font-display);
+  font-size: 4.5rem;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--text-dark);
+  margin-top: 0.5rem;
+}

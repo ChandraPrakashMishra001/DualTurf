@@ -1,0 +1,218 @@
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem 1.5rem;
+}
+
+.adminHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+
+.subtext {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  margin-top: 0.25rem;
+}
+
+.controlsBar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.searchBox input {
+  width: 100%;
+  min-width: 320px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.searchBox input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  span {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+}
+
+.filterTab {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.filterTab:hover,
+.activeTab {
+  background-color: var(--accent-color);
+  color: #000000;
+  border-color: var(--accent-color);
+}
+
+.loadingBox,
+.emptyBox {
+  text-align: center;
+  padding: 5rem 0;
+  color: var(--text-muted);
+  font-size: 1.125rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.orderCard {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  background-color: #111111;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.orderIdBadge {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--accent-color);
+  margin-right: 1.5rem;
+}
+
+.orderTime {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.statusSelect {
+  background-color: #171717;
+  border: 1px solid var(--border-color);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding: 2rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1.1fr 1.2fr 1.3fr 1fr;
+  }
+}
+
+.infoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  h4 {
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.375rem;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+}
+
+.waLink {
+  color: #25d366;
+  font-weight: 700;
+}
+
+.waLink:hover {
+  text-decoration: underline;
+}
+
+.itemsList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  li {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  span {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.9375rem;
+}
+
+.totalVal {
+  color: var(--accent-color);
+  font-size: 1.125rem;
+}
+
+.utrCode {
+  background-color: #000000;
+  color: var(--accent-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 0.875rem;
+}

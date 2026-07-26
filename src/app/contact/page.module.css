@@ -1,0 +1,144 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  color: #fff;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.subtitle {
+  color: #a0a0a0;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.layout {
+  display: flex;
+  gap: 4rem;
+}
+
+.formSection {
+  flex: 2;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.formRow .formGroup {
+  flex: 1;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ccc;
+}
+
+.formGroup input,
+.formGroup textarea {
+  background: transparent;
+  border: 1px solid #333;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.submitBtn {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: background 0.2s;
+}
+
+.submitBtn:hover {
+  background: #e0e0e0;
+}
+
+.infoSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.infoCard {
+  background: #111;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+
+.infoCard h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.infoCard p {
+  margin: 0 0 0.5rem 0;
+  color: #a0a0a0;
+}
+
+.socialLink {
+  display: block;
+  color: #a0a0a0;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s;
+}
+
+.socialLink:hover {
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  
+  .formRow {
+    flex-direction: column;
+  }
+}

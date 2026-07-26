@@ -1,0 +1,490 @@
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 4rem 2.5rem 8rem 2.5rem;
+  }
+}
+
+/* Stepper */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto 4rem auto;
+}
+
+.stepNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+
+  span {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-muted);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-smooth);
+  }
+
+  p {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+}
+
+.activeNode {
+  span {
+    border-color: var(--accent-color);
+    background-color: var(--accent-color);
+    color: #000000;
+  }
+
+  p {
+    color: var(--accent-color);
+  }
+}
+
+.completedNode {
+  span {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+  }
+}
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background-color: var(--border-color);
+  margin: 0 1rem 1.5rem 1rem;
+}
+
+/* Cart Layout */
+.emptyCart {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+}
+
+.cartLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .cartLayout {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+.cartItems {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cartRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 1.25rem 1rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.colProduct {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.itemImage {
+  width: 70px;
+  height: 85px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.itemName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+
+  &:hover {
+    color: var(--accent-color);
+  }
+}
+
+.itemVariant {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0;
+}
+
+.removeBtn {
+  font-size: 0.75rem;
+  color: #ff5555;
+  text-decoration: underline;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.colPrice,
+.colTotal {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.colTotal {
+  color: var(--accent-color);
+}
+
+.qtyBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  background-color: #111111;
+
+  button {
+    width: 24px;
+    height: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  span {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+}
+
+.summaryCard {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2rem;
+  height: fit-content;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.summaryTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0;
+  font-weight: 800;
+  font-size: 1.125rem;
+}
+
+.continueLink {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+
+  &:hover {
+    color: var(--accent-color);
+  }
+}
+
+/* Shipping Form */
+.formContainer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.addressForm {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  input {
+    background-color: #111111;
+    border: 1px solid var(--border-color);
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    transition: var(--transition-smooth);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+  }
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.formRow3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* UPI Payment Section */
+.upiContainer {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.upiSubtext {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 3rem;
+  font-size: 1rem;
+}
+
+.upiBox {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2.5rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .upiBox {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  border-right: 1px solid var(--border-color);
+  padding-right: 2rem;
+}
+
+@media (max-width: 768px) {
+  .qrSection {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding-right: 0;
+    padding-bottom: 2rem;
+  }
+}
+
+.qrCard {
+  background-color: #ffffff;
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qrCodeImg {
+  width: 220px;
+  height: 220px;
+}
+
+.amountBadge {
+  background-color: #000000;
+  color: var(--accent-color);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  font-size: 0.875rem;
+}
+
+.qrHint {
+  font-size: 0.75rem;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+.upiDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9375rem;
+
+  span {
+    color: var(--text-muted);
+  }
+}
+
+.upiId {
+  background-color: #111111;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  font-size: 0.875rem;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 0.5rem 0;
+}
+
+.utrForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  input {
+    background-color: #111111;
+    border: 1px solid var(--border-color);
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+  }
+}
+
+/* Confirmed Box */
+.confirmedBox {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 3.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: #000000;
+  font-size: 3rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.orderIdText {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+.confirmedSub {
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.deliveryCard {
+  background-color: #111111;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  width: 100%;
+  text-align: left;
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+}

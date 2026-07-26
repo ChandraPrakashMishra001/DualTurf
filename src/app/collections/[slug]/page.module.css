@@ -1,0 +1,241 @@
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 6rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2.5rem 2.5rem 8rem 2.5rem;
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  margin-bottom: 2rem;
+
+  a:hover {
+    color: var(--accent-color);
+  }
+}
+
+.currentBreadcrumb {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.header {
+  margin-bottom: 3rem;
+  text-align: center;
+
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    letter-spacing: 0.05em;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background-color: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  height: fit-content;
+}
+
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filterTitle {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.filterList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+
+  li a {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    transition: var(--transition-smooth);
+  }
+
+  li a:hover,
+  .activeFilter {
+    color: var(--accent-color) !important;
+    font-weight: 700;
+  }
+
+  label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.productCount {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+}
+
+.sortSelect {
+  background-color: #111111;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.sortSelect:focus {
+  border-color: var(--accent-color);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  display: block;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.saleBadge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: var(--accent-color);
+  color: #000000;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.1em;
+}
+
+.info {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.productName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.productName:hover {
+  color: var(--accent-color);
+}
+
+.priceContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.price {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.originalPrice {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  text-decoration: line-through;
+}
