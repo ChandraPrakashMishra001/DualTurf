@@ -71,18 +71,9 @@ export default function NewsLetter() {
         <div className={styles.overlay} />
       </div>
 
-      {/* Top bar — Brand name only */}
-      <div className={styles.topBar}>
-        <span className={styles.brand}>
-          <span className={styles.white}>D</span><span className={styles.green}>ual</span>{' '}
-          <span className={styles.white}>T</span><span className={styles.green}>urf</span>
-        </span>
-      </div>
-
-      {/* Bottom Left — Coming Soon + Timer + Dots */}
+      {/* Main Content — Coming Soon + Countdown Timer */}
       <div className={styles.bottomLeft}>
         <h1 className={styles.heading}>Coming Soon</h1>
-        <p className={styles.launchDate}>Launching on 10th August 2026</p>
 
         {/* Countdown */}
         <div className={styles.timerRow}>
