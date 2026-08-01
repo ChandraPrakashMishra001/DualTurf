@@ -1,18 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { products } from '@/data/products';
+import { getAllProducts } from '@/lib/sanity';
 import styles from './page.module.css';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  
+  const [productsList, setProductsList] = useState([]);
+
+  useEffect(() => {
+    getAllProducts().then(data => {
+      if (data) setProductsList(data);
+    });
+  }, []);
+
   const searchResults = query.trim() === '' 
     ? [] 
-    : products.filter(product => 
-        product.name.toLowerCase().includes(query.toLowerCase()) || 
-        product.team.toLowerCase().includes(query.toLowerCase())
+    : productsList.filter(product => 
+        (product.name && product.name.toLowerCase().includes(query.toLowerCase())) || 
+        (product.team && product.team.toLowerCase().includes(query.toLowerCase()))
       );
 
   return (
@@ -38,37 +45,21 @@ export default function SearchPage() {
           </p>
         )}
 
-        {query && searchResults.length === 0 && (
-          <div className={styles.emptyState}>
-            <h2>No results found</h2>
-            <p>Try checking your spelling or use more general terms</p>
-          </div>
-        )}
-
-        {searchResults.length > 0 && (
-          <div className={styles.grid}>
-            {searchResults.map(product => (
-              <Link href={`/products/${product.slug}`} key={product.id} className={styles.card}>
-                <div className={styles.imageWrapper} style={{ background: product.gradient }}>
-                  {product.originalPrice && <span className={styles.saleBadge}>Sale</span>}
-                </div>
-                <div className={styles.info}>
-                  <h3 className={styles.productName}>{product.name}</h3>
-                  <div className={styles.priceContainer}>
-                    {product.originalPrice ? (
-                      <>
-                        <span className={styles.price}>₹{product.price}</span>
-                        <span className={styles.originalPrice}>₹{product.originalPrice}</span>
-                      </>
-                    ) : (
-                      <span className={styles.price}>₹{product.price}</span>
-                    )}
-                  </div>
-                </div>
+        <div className={styles.grid}>
+          {searchResults.map(product => (
+            <div key={product.id || product._id} className={styles.card}>
+              <Link href={`/products/${product.slug}`} className={styles.imgWrapper}>
+                <img src={product.image} alt={product.title || product.name} className={styles.img} />
               </Link>
-            ))}
-          </div>
-        )}
+              <div className={styles.meta}>
+                <Link href={`/products/${product.slug}`}>
+                  <h3 className={styles.productTitle}>{product.title || product.name}</h3>
+                </Link>
+                <p className={styles.price}>₹{product.price}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

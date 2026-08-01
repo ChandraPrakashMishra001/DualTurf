@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { HERO_SLIDES, CATEGORIES, LATEST_DROP, INTERNATIONAL_KITS } from '@/data/products'
+import { getAllProducts } from '@/lib/sanity'
 import { useCart } from '@/context/CartContext'
-import AsciiEffectCanvas from '@/components/AsciiEffectCanvas'
 import ScrollReveal from '@/components/ScrollReveal'
 import GlowCard from '@/components/GlowCard'
 import styles from './page.module.css'
@@ -13,7 +13,18 @@ export default function Home() {
   const [heroIndex, setHeroIndex] = useState(0)
   const [intlIndex, setIntlIndex] = useState(0)
   const [addedMessage, setAddedMessage] = useState(null)
+  const [productsList, setProductsList] = useState([])
   const { addToCart } = useCart()
+
+  useEffect(() => {
+    getAllProducts().then(data => {
+      if (data && data.length > 0) {
+        setProductsList(data)
+      }
+    }).catch(err => {
+      console.error("Sanity fetch error on homepage:", err)
+    })
+  }, [])
 
   // Auto slide hero banner if multiple slides exist
   useEffect(() => {
@@ -29,6 +40,11 @@ export default function Home() {
     setAddedMessage(`Added ${product.title || product.name} to bag!`)
     setTimeout(() => setAddedMessage(null), 3000)
   }
+
+  const latestDropProducts = productsList.length > 0 ? productsList.slice(0, 8) : LATEST_DROP
+  const intlKitsProducts = productsList.filter(p => p.category === 'international-kits').length > 0
+    ? productsList.filter(p => p.category === 'international-kits')
+    : INTERNATIONAL_KITS
 
   return (
     <div className={styles.homeContainer}>
@@ -141,8 +157,8 @@ export default function Home() {
             <h2 className={`font-display title-underline ${styles.sectionTitle}`}>LATEST DROP</h2>
           </ScrollReveal>
           <div className={styles.productGrid}>
-            {LATEST_DROP.map((product, idx) => (
-              <ScrollReveal key={product.id} direction="scale" delay={idx * 0.12}>
+            {latestDropProducts.map((product, idx) => (
+              <ScrollReveal key={product.id || product._id || idx} direction="scale" delay={idx * 0.12}>
                 <div className={`product-card ${styles.productCard}`}>
                   <Link href={`/products/${product.slug}`} className={styles.productImgWrapper}>
                     <div
@@ -180,54 +196,58 @@ export default function Home() {
       </section>
 
       {/* Best of International Home Kits Slider */}
-      <section className={styles.section}>
-        <div className="container">
-          <ScrollReveal direction="up">
-            <h2 className={`font-display title-underline ${styles.sectionTitle}`}>
-              BEST OF INTERNATIONAL HOME KITS
-            </h2>
-          </ScrollReveal>
-          <ScrollReveal direction="up" delay={0.2}>
-            <div className={styles.intlSlider}>
-              {INTERNATIONAL_KITS.map((kit, idx) => (
-                <div
-                  key={kit.id}
-                  className={`${styles.intlSlide} ${idx === intlIndex ? styles.activeIntlSlide : ''}`}
-                >
+      {intlKitsProducts.length > 0 && (
+        <section className={styles.section}>
+          <div className="container">
+            <ScrollReveal direction="up">
+              <h2 className={`font-display title-underline ${styles.sectionTitle}`}>
+                BEST OF INTERNATIONAL HOME KITS
+              </h2>
+            </ScrollReveal>
+            <ScrollReveal direction="up" delay={0.2}>
+              <div className={styles.intlSlider}>
+                {intlKitsProducts.map((kit, idx) => (
                   <div
-                    className={styles.intlBg}
-                    style={{ backgroundImage: `url(${kit.image})` }}
-                  />
-                  <div className={styles.intlOverlay} />
-                  <div className={styles.intlContent}>
-                    <h3 className="font-display">{kit.title}</h3>
-                    <p className={styles.intlPrice}>₹{kit.price}</p>
-                    <button onClick={() => handleQuickAdd(kit)} className="btn-outline">
-                      ADD TO BAG
+                    key={kit.id || kit._id || idx}
+                    className={`${styles.intlSlide} ${idx === intlIndex ? styles.activeIntlSlide : ''}`}
+                  >
+                    <div
+                      className={styles.intlBg}
+                      style={{ backgroundImage: `url(${kit.image})` }}
+                    />
+                    <div className={styles.intlOverlay} />
+                    <div className={styles.intlContent}>
+                      <h3 className="font-display">{kit.title || kit.name}</h3>
+                      <p className={styles.intlPrice}>₹{kit.price}</p>
+                      <button onClick={() => handleQuickAdd(kit)} className="btn-outline">
+                        ADD TO BAG
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {intlKitsProducts.length > 1 && (
+                  <div className={styles.sliderArrows}>
+                    <button
+                      onClick={() =>
+                        setIntlIndex((prev) => (prev - 1 + intlKitsProducts.length) % intlKitsProducts.length)
+                      }
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={() =>
+                        setIntlIndex((prev) => (prev + 1) % intlKitsProducts.length)
+                      }
+                    >
+                      ›
                     </button>
                   </div>
-                </div>
-              ))}
-              <div className={styles.sliderArrows}>
-                <button
-                  onClick={() =>
-                    setIntlIndex((prev) => (prev - 1 + INTERNATIONAL_KITS.length) % INTERNATIONAL_KITS.length)
-                  }
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={() =>
-                    setIntlIndex((prev) => (prev + 1) % INTERNATIONAL_KITS.length)
-                  }
-                >
-                  ›
-                </button>
+                )}
               </div>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+            </ScrollReveal>
+          </div>
+        </section>
+      )}
 
       {/* Brand Story & Stats Section */}
       <section className={`${styles.section} ${styles.brandSection}`}>

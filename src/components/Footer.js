@@ -10,7 +10,7 @@ export default function Footer() {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const pathname = usePathname()
-  if (pathname === '/coming-soon' || pathname === '/') return null
+  if (pathname === '/coming-soon') return null
 
   const handleSubscribe = (e) => {
     e.preventDefault()

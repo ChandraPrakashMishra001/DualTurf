@@ -1,21 +1,22 @@
 import Link from 'next/link';
-import { products, categories } from '@/data/products';
+import { getProductsByCategory, getAllProducts } from '@/lib/sanity';
+import { CATEGORIES } from '@/data/products';
 import styles from './page.module.css';
 
 export default async function CollectionPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || 'all';
-  
+
   // Find category name or default to slug
-  const category = categories.find(c => c.slug === slug || c.id === slug);
+  const category = CATEGORIES.find(c => c.slug === slug || c.id === slug);
   const title = category ? category.name : (slug === 'all' ? 'ALL PRODUCTS' : slug.replace(/-/g, ' ').toUpperCase());
 
-  // Filter products by category
-  const categoryProducts = slug === 'all' 
-    ? products 
-    : products.filter(p => p.category === slug || p.slug === slug);
+  // Fetch products from Sanity
+  const categoryProducts = slug === 'all'
+    ? await getAllProducts()
+    : await getProductsByCategory(slug);
 
-  const displayProducts = categoryProducts.length > 0 ? categoryProducts : products;
+  const displayProducts = categoryProducts;
 
   return (
     <div className={styles.container}>
@@ -37,7 +38,7 @@ export default async function CollectionPage({ params }) {
           <div className={styles.filterSection}>
             <h3 className={styles.filterTitle}>Category</h3>
             <ul className={styles.filterList}>
-              {categories.map(cat => (
+              {CATEGORIES.map(cat => (
                 <li key={cat.id}>
                   <Link 
                     href={`/collections/${cat.slug}`}

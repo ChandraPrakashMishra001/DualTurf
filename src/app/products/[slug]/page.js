@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { products, categories } from '@/data/products';
+import { getProductBySlug, getAllProducts } from '@/lib/sanity';
+import { CATEGORIES } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 import styles from './page.module.css';
 
@@ -11,16 +12,56 @@ export default function ProductDetailPage() {
   const params = useParams();
   const rawSlug = params?.slug;
   const { addToCart } = useCart();
-  
-  // Find product
-  const product = products.find(p => p.slug === rawSlug || p.id === rawSlug) || products[0];
-  
-  // Category for breadcrumb
-  const category = categories.find(c => c.slug === product.category) || { name: 'Collections', slug: 'all' };
-  
+  const [product, setProduct] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedImg, setSelectedImg] = useState('');
   const [selectedSize, setSelectedSize] = useState('M');
   const [openAccordion, setOpenAccordion] = useState('shipping');
   const [toastMsg, setToastMsg] = useState(null);
+
+  useEffect(() => {
+    if (rawSlug) {
+      setLoading(true);
+      Promise.all([
+        getProductBySlug(rawSlug),
+        getAllProducts()
+      ]).then(([prodData, allData]) => {
+        setProduct(prodData);
+        setAllProducts(allData || []);
+        if (prodData?.image) {
+          setSelectedImg(prodData.image);
+        }
+        if (prodData?.sizes && prodData.sizes.length > 0) {
+          setSelectedSize(prodData.sizes[0]);
+        }
+        setLoading(false);
+      }).catch(err => {
+        console.error("Error loading product:", err);
+        setLoading(false);
+      });
+    }
+  }, [rawSlug]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: '1rem' }}>
+        <h2>Product not found.</h2>
+        <Link href="/collections/all" className="btn-primary">Browse All Products</Link>
+      </div>
+    );
+  }
+
+  // Category for breadcrumb
+  const category = CATEGORIES.find(c => c.slug === product.category) || { name: 'Collections', slug: 'all' };
 
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
@@ -32,7 +73,10 @@ export default function ProductDetailPage() {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 4);
+  const relatedProducts = allProducts.filter(p => p.slug !== product.slug).slice(0, 4);
+  const imageList = product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
+  const displayMainImg = selectedImg || product.image;
+  const availableSizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
 
   return (
     <div className={styles.container}>
@@ -54,16 +98,23 @@ export default function ProductDetailPage() {
         {/* Gallery */}
         <div className={styles.gallery}>
           <div className={styles.mainImageWrapper}>
-            <img src={product.image} alt={product.title || product.name} className={styles.mainImg} />
+            <img src={displayMainImg} alt={product.title || product.name} className={styles.mainImg} />
             {product.originalPrice && <span className={styles.saleBadge}>SALE</span>}
           </div>
-          <div className={styles.thumbnailRow}>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className={styles.thumbnail}>
-                <img src={product.image} alt="thumbnail" />
-              </div>
-            ))}
-          </div>
+          {imageList.length > 1 && (
+            <div className={styles.thumbnailRow}>
+              {imageList.map((img, i) => (
+                <div
+                  key={i}
+                  className={`${styles.thumbnail} ${img === displayMainImg ? styles.activeThumbnail : ''}`}
+                  onClick={() => setSelectedImg(img)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <img src={img} alt={`thumbnail ${i + 1}`} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -77,13 +128,19 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          {product.description && (
+            <p className={styles.descriptionText} style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', lineHeight: '1.6', margin: '1rem 0' }}>
+              {product.description}
+            </p>
+          )}
+
           <div className={styles.sizeSection}>
             <div className={styles.sizeHeader}>
               <span className={styles.sizeLabel}>Size: <strong>{selectedSize}</strong></span>
               <button className={styles.sizeGuideBtn}>Size Guide 📐</button>
             </div>
             <div className={styles.sizeGrid}>
-              {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+              {availableSizes.map(size => (
                 <button 
                   key={size}
                   className={`${styles.sizeBtn} ${selectedSize === size ? styles.selectedSize : ''}`}
@@ -103,7 +160,7 @@ export default function ProductDetailPage() {
             <li>100% recycled polyester with Dri-FIT technology</li>
             <li>Official club detailing & high-density crest</li>
             <li>Machine wash cold inside-out</li>
-            <li>Standard / Regular athletic fit</li>
+            <li>{product.type || 'Stadium / Regular athletic fit'}</li>
             <li>Dispatched within 48 hrs from Mumbai</li>
           </ul>
 
@@ -162,26 +219,28 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Related Products */}
-      <div className={styles.relatedSection}>
-        <h2 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '2.5rem' }}>
-          PAIRS WELL WITH
-        </h2>
-        <div className={styles.relatedGrid}>
-          {relatedProducts.map(related => (
-            <div key={related.id} className={`product-card ${styles.relatedCard}`}>
-              <Link href={`/products/${related.slug}`} className={styles.relatedImage}>
-                <img src={related.image} alt={related.title || related.name} className="product-card-img" />
-              </Link>
-              <div className={styles.relatedMeta}>
-                <Link href={`/products/${related.slug}`}>
-                  <h3 className={styles.relatedName}>{related.title || related.name}</h3>
+      {relatedProducts.length > 0 && (
+        <div className={styles.relatedSection}>
+          <h2 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '2.5rem' }}>
+            PAIRS WELL WITH
+          </h2>
+          <div className={styles.relatedGrid}>
+            {relatedProducts.map(related => (
+              <div key={related.id} className={`product-card ${styles.relatedCard}`}>
+                <Link href={`/products/${related.slug}`} className={styles.relatedImage}>
+                  <img src={related.image} alt={related.title || related.name} className="product-card-img" />
                 </Link>
-                <span className={styles.relatedPrice}>₹{related.price}</span>
+                <div className={styles.relatedMeta}>
+                  <Link href={`/products/${related.slug}`}>
+                    <h3 className={styles.relatedName}>{related.title || related.name}</h3>
+                  </Link>
+                  <span className={styles.relatedPrice}>₹{related.price}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
