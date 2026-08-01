@@ -89,22 +89,36 @@ export function AuthProvider({ children }) {
       createdAt: new Date().toISOString(),
     }
 
+    let user = null
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password)
-      const user = credential.user
+      user = credential.user
       await updateProfile(user, { displayName: fullName })
       profileData.uid = user.uid
       try {
         await setDoc(doc(db, 'users', user.uid), profileData)
       } catch (e) {}
     } catch (e) {
-      console.warn('Firebase Auth register notice:', e.message)
+      if (e.code === 'auth/email-already-in-use') {
+        throw new Error('An account with this email already exists. Please Sign In.')
+      } else if (e.code === 'auth/weak-password') {
+        throw new Error('Password should be at least 6 characters long.')
+      } else if (e.code === 'auth/invalid-email') {
+        throw new Error('Please enter a valid email address.')
+      }
+      console.warn('Firebase Auth register warning (using fallback session):', e.message)
     }
 
+    // Save session locally
     try {
       localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
       const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
-      savedUsers.push({ ...profileData, password })
+      const existingIdx = savedUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase())
+      if (existingIdx > -1) {
+        savedUsers[existingIdx] = { ...profileData, password }
+      } else {
+        savedUsers.push({ ...profileData, password })
+      }
       localStorage.setItem('dualturf_users', JSON.stringify(savedUsers))
     } catch (err) {}
 

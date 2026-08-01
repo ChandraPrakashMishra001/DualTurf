@@ -31,7 +31,8 @@ export default function RegisterPage() {
       await register(formData.firstName, formData.lastName, formData.email, formData.password);
       router.push('/account/login?registered=true');
     } catch (err) {
-      setError(err.message || 'Failed to create account.');
+      setError(err.message || 'Failed to create account. Please try again.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -132,7 +133,7 @@ export default function RegisterPage() {
             <input 
               type="password" 
               name="password" 
-              placeholder="Password" 
+              placeholder="Password (min 6 characters)" 
               className={styles.input} 
               required 
               minLength={6}
