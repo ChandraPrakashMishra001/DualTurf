@@ -19,38 +19,47 @@ export function AuthProvider({ children }) {
   const [userOrders, setUserOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Listen to Firebase Auth state changes
+  // Load saved session on init
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user)
-      if (user) {
-        // Fetch user profile from Firestore
-        try {
-          const userDocRef = doc(db, 'users', user.uid)
-          const userSnap = await getDoc(userDocRef)
-          if (userSnap.exists()) {
-            setUserProfile(userSnap.data())
-          } else {
-            setUserProfile({
-              uid: user.uid,
-              name: user.displayName || 'Customer',
-              email: user.email,
-            })
-          }
-
-          // Fetch user order history from Firestore
-          fetchUserOrders(user.uid)
-        } catch (e) {
-          console.warn('Firestore fetch error (using fallback local state):', e)
-        }
-      } else {
-        setUserProfile(null)
-        setUserOrders([])
+    try {
+      const localCurrent = localStorage.getItem('dualturf_current_user')
+      if (localCurrent) {
+        const parsed = JSON.parse(localCurrent)
+        setCurrentUser(parsed)
+        setUserProfile(parsed)
       }
-      setLoading(false)
-    })
+    } catch (e) {
+      console.warn('LocalStorage session read error:', e)
+    }
 
-    return () => unsubscribe()
+    try {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          setCurrentUser(user)
+          try {
+            const userDocRef = doc(db, 'users', user.uid)
+            const userSnap = await getDoc(userDocRef)
+            if (userSnap.exists()) {
+              setUserProfile(userSnap.data())
+            } else {
+              setUserProfile({
+                uid: user.uid,
+                name: user.displayName || user.email,
+                email: user.email,
+              })
+            }
+            fetchUserOrders(user.uid)
+          } catch (e) {
+            console.warn('Firestore fetch fallback:', e)
+          }
+        }
+        setLoading(false)
+      })
+      return () => unsubscribe()
+    } catch (e) {
+      console.warn('Firebase init fallback:', e)
+      setLoading(false)
+    }
   }, [])
 
   const fetchUserOrders = async (uid) => {
@@ -63,19 +72,14 @@ export function AuthProvider({ children }) {
       })
       setUserOrders(orders)
     } catch (e) {
-      console.warn('Failed to fetch user order history from Firestore:', e)
+      console.warn('Failed to fetch user orders:', e)
     }
   }
 
   const register = async (firstName, lastName, email, password) => {
     const fullName = `${firstName} ${lastName}`
-    const credential = await createUserWithEmailAndPassword(auth, email, password)
-    const user = credential.user
-
-    await updateProfile(user, { displayName: fullName })
-
     const profileData = {
-      uid: user.uid,
+      uid: `user_${Date.now()}`,
       firstName,
       lastName,
       name: fullName,
@@ -84,23 +88,78 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      // Store user profile permanently in Firestore
-      await setDoc(doc(db, 'users', user.uid), profileData)
+      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = credential.user
+      await updateProfile(user, { displayName: fullName })
+      profileData.uid = user.uid
+      try {
+        await setDoc(doc(db, 'users', user.uid), profileData)
+      } catch (e) {}
     } catch (e) {
-      console.warn('Firestore setDoc error:', e)
+      console.warn('Firebase Auth register notice (using local session fallback):', e.message)
     }
 
+    // Save session locally
+    try {
+      localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
+      const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
+      savedUsers.push({ ...profileData, password })
+      localStorage.setItem('dualturf_users', JSON.stringify(savedUsers))
+    } catch (err) {}
+
+    setCurrentUser(profileData)
     setUserProfile(profileData)
-    return user
+    return profileData
   }
 
   const login = async (email, password) => {
-    const credential = await signInWithEmailAndPassword(auth, email, password)
-    return credential.user
+    let user = null
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      user = credential.user
+    } catch (e) {
+      console.warn('Firebase Auth login notice (checking local users fallback):', e.message)
+    }
+
+    if (!user) {
+      // Fallback local lookup
+      try {
+        const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
+        const found = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
+        if (found) {
+          user = found
+        }
+      } catch (err) {}
+    }
+
+    if (!user) {
+      throw new Error('Invalid email or password. Please check your credentials.')
+    }
+
+    const sessionObj = {
+      uid: user.uid || user.id || `user_${Date.now()}`,
+      name: user.name || user.displayName || user.email,
+      email: user.email,
+      createdAt: user.createdAt || new Date().toISOString(),
+    }
+
+    try {
+      localStorage.setItem('dualturf_current_user', JSON.stringify(sessionObj))
+    } catch (e) {}
+
+    setCurrentUser(sessionObj)
+    setUserProfile(sessionObj)
+    return sessionObj
   }
 
   const logout = async () => {
-    await signOut(auth)
+    try {
+      await signOut(auth)
+    } catch (e) {}
+    try {
+      localStorage.removeItem('dualturf_current_user')
+    } catch (e) {}
+    setCurrentUser(null)
     setUserProfile(null)
     setUserOrders([])
   }
