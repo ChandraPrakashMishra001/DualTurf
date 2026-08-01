@@ -13,12 +13,20 @@ export default async function CollectionPage({ params }) {
   const category = CATEGORIES.find(c => c.slug === slug || c.id === slug);
   const title = category ? category.name : (slug === 'all' ? 'ALL PRODUCTS' : slug.replace(/-/g, ' ').toUpperCase());
 
-  // Fetch products from Sanity
+  // Fetch all products first
+  const allProducts = await getAllProducts();
+
+  // Filter or query category products
   const categoryProducts = slug === 'all'
-    ? await getAllProducts()
+    ? allProducts
     : await getProductsByCategory(slug);
 
-  const displayProducts = categoryProducts;
+  // If a specific category has no products uploaded yet, fallback to allProducts so products never vanish
+  const displayProducts = (categoryProducts && categoryProducts.length > 0)
+    ? categoryProducts
+    : allProducts;
+
+  const isFallback = slug !== 'all' && (!categoryProducts || categoryProducts.length === 0);
 
   return (
     <div className={styles.container}>
@@ -32,6 +40,11 @@ export default async function CollectionPage({ params }) {
 
       <div className={styles.header}>
         <h1 className="font-display title-underline">{title}</h1>
+        {isFallback && (
+          <p style={{ color: 'var(--accent-color)', marginTop: '1rem', fontSize: '0.9375rem' }}>
+            Showing all available jerseys below:
+          </p>
+        )}
       </div>
 
       <div className={styles.layout}>
@@ -40,6 +53,14 @@ export default async function CollectionPage({ params }) {
           <div className={styles.filterSection}>
             <h3 className={styles.filterTitle}>Category</h3>
             <ul className={styles.filterList}>
+              <li>
+                <Link 
+                  href="/collections/all"
+                  className={slug === 'all' ? styles.activeFilter : ''}
+                >
+                  ALL PRODUCTS
+                </Link>
+              </li>
               {CATEGORIES.map(cat => (
                 <li key={cat.id}>
                   <Link 
@@ -75,7 +96,7 @@ export default async function CollectionPage({ params }) {
         {/* Main Content */}
         <main className={styles.main}>
           <div className={styles.toolbar}>
-            <span className={styles.productCount}>{displayProducts.length} products</span>
+            <span className={styles.productCount}>{displayProducts.length} products available</span>
             <div className={styles.sort}>
               <label htmlFor="sort">Sort by:</label>
               <select id="sort" className={styles.sortSelect}>
@@ -91,7 +112,7 @@ export default async function CollectionPage({ params }) {
 
           <div className={styles.grid}>
             {displayProducts.map(product => (
-              <div key={product.id} className={`product-card ${styles.card}`}>
+              <div key={product.id || product._id} className={`product-card ${styles.card}`}>
                 <Link href={`/products/${product.slug}`} className={styles.imageWrapper}>
                   <img src={product.image} alt={product.title || product.name} className="product-card-img" />
                   {product.originalPrice && <span className={styles.saleBadge}>SALE</span>}

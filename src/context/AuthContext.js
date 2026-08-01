@@ -1,93 +1,121 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+} from 'firebase/auth'
+import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase'
 
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null)
-  const [users, setUsers] = useState([])
+  const [userProfile, setUserProfile] = useState(null)
+  const [userOrders, setUserOrders] = useState([])
+  const [loading, setLoading] = useState(true)
 
+  // Listen to Firebase Auth state changes
   useEffect(() => {
-    try {
-      const savedUsers = localStorage.getItem('dualturf_users')
-      if (savedUsers) {
-        setUsers(JSON.parse(savedUsers))
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user)
+      if (user) {
+        // Fetch user profile from Firestore
+        try {
+          const userDocRef = doc(db, 'users', user.uid)
+          const userSnap = await getDoc(userDocRef)
+          if (userSnap.exists()) {
+            setUserProfile(userSnap.data())
+          } else {
+            setUserProfile({
+              uid: user.uid,
+              name: user.displayName || 'Customer',
+              email: user.email,
+            })
+          }
+
+          // Fetch user order history from Firestore
+          fetchUserOrders(user.uid)
+        } catch (e) {
+          console.warn('Firestore fetch error (using fallback local state):', e)
+        }
+      } else {
+        setUserProfile(null)
+        setUserOrders([])
       }
-      const savedCurrent = localStorage.getItem('dualturf_current_user')
-      if (savedCurrent) {
-        setCurrentUser(JSON.parse(savedCurrent))
-      }
-    } catch (e) {
-      console.error('Failed to load user session:', e)
-    }
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
   }, [])
 
-  const register = (firstName, lastName, email, password) => {
-    const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-    if (existing) {
-      throw new Error('An account with this email address already exists. Please login.')
+  const fetchUserOrders = async (uid) => {
+    try {
+      const q = query(collection(db, 'orders'), where('userId', '==', uid))
+      const querySnapshot = await getDocs(q)
+      const orders = []
+      querySnapshot.forEach((doc) => {
+        orders.push({ id: doc.id, ...doc.data() })
+      })
+      setUserOrders(orders)
+    } catch (e) {
+      console.warn('Failed to fetch user order history from Firestore:', e)
     }
+  }
 
-    const newUser = {
-      id: `user_${Date.now()}`,
+  const register = async (firstName, lastName, email, password) => {
+    const fullName = `${firstName} ${lastName}`
+    const credential = await createUserWithEmailAndPassword(auth, email, password)
+    const user = credential.user
+
+    await updateProfile(user, { displayName: fullName })
+
+    const profileData = {
+      uid: user.uid,
       firstName,
       lastName,
-      name: `${firstName} ${lastName}`,
+      name: fullName,
       email: email.toLowerCase(),
-      password,
       createdAt: new Date().toISOString(),
     }
 
-    const updatedUsers = [...users, newUser]
-    setUsers(updatedUsers)
-    setCurrentUser(newUser)
-
     try {
-      localStorage.setItem('dualturf_users', JSON.stringify(updatedUsers))
-      localStorage.setItem('dualturf_current_user', JSON.stringify(newUser))
+      // Store user profile permanently in Firestore
+      await setDoc(doc(db, 'users', user.uid), profileData)
     } catch (e) {
-      console.error('Failed to save user session:', e)
+      console.warn('Firestore setDoc error:', e)
     }
 
-    return newUser
-  }
-
-  const login = (email, password) => {
-    const user = users.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    )
-
-    if (!user) {
-      throw new Error('Invalid email or password. Please check your credentials.')
-    }
-
-    setCurrentUser(user)
-    try {
-      localStorage.setItem('dualturf_current_user', JSON.stringify(user))
-    } catch (e) {
-      console.error('Failed to save login session:', e)
-    }
-
+    setUserProfile(profileData)
     return user
   }
 
-  const logout = () => {
-    setCurrentUser(null)
-    try {
-      localStorage.removeItem('dualturf_current_user')
-    } catch (e) {
-      console.error('Failed to clear user session:', e)
-    }
+  const login = async (email, password) => {
+    const credential = await signInWithEmailAndPassword(auth, email, password)
+    return credential.user
+  }
+
+  const logout = async () => {
+    await signOut(auth)
+    setUserProfile(null)
+    setUserOrders([])
   }
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
+        userProfile,
+        userOrders,
+        loading,
         register,
         login,
         logout,
+        fetchUserOrders: () => currentUser && fetchUserOrders(currentUser.uid),
       }}
     >
       {children}

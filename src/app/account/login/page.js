@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const { currentUser, login, logout } = useAuth();
+  const { currentUser, userProfile, userOrders, login, logout } = useAuth();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('registered')) {
@@ -24,32 +25,77 @@ function LoginForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSubmitting(true);
     try {
-      login(formData.email, formData.password);
+      await login(formData.email, formData.password);
       setSuccessMsg('Welcome back!');
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      let msg = 'Invalid email or password.';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+        msg = 'No account found with this email or invalid password.';
+      }
+      setError(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email || 'Customer';
 
   if (currentUser) {
     return (
       <div className={styles.container}>
-        <div className={styles.formWrapper} style={{ textAlign: 'center' }}>
-          <h1 className={styles.title}>My Account</h1>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.125rem' }}>
-            Welcome back, <strong style={{ color: 'var(--accent-color)' }}>{currentUser.name}</strong>!
-          </p>
-          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem', textAlign: 'left' }}>
-            <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {currentUser.name}</p>
-            <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {currentUser.email}</p>
-            <p style={{ margin: '0.4rem 0', fontSize: '0.875rem', color: 'var(--text-dark)' }}>Member since: {new Date(currentUser.createdAt).toLocaleDateString()}</p>
+        <div className={styles.formWrapper} style={{ maxWidth: '800px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h1 className={styles.title}>My Account</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.125rem' }}>
+              Welcome back, <strong style={{ color: 'var(--accent-color)' }}>{displayName}</strong>!
+            </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+          {/* User Info Card */}
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.75rem', marginBottom: '2.5rem' }}>
+            <h3 style={{ color: 'var(--accent-color)', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>
+              👤 Account Details
+            </h3>
+            <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {displayName}</p>
+            <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {currentUser.email}</p>
+            <p style={{ margin: '0.4rem 0', fontSize: '0.875rem', color: 'var(--text-dark)' }}>
+              Member Status: <span style={{ color: '#25D366', fontWeight: 600 }}>Active (Firebase Cloud Verified)</span>
+            </p>
+          </div>
+
+          {/* Order History */}
+          <div style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.75rem', marginBottom: '2.5rem' }}>
+            <h3 style={{ color: 'var(--accent-color)', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1rem' }}>
+              📦 Order History ({userOrders.length})
+            </h3>
+
+            {userOrders.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
+                You haven't placed any orders yet. Once you place an order, your complete order history will be saved here permanently.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {userOrders.map((ord) => (
+                  <div key={ord.id || ord.orderId} style={{ backgroundColor: '#111111', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <strong style={{ color: 'var(--text-primary)' }}>Order #{ord.orderId}</strong>
+                      <span style={{ color: 'var(--accent-color)', fontSize: '0.875rem' }}>{ord.status || 'Processing'}</span>
+                    </div>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                      Total: ₹{ord.totalAmount || ord.subtotal} • Items: {ord.items?.length || 0}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/collections/all" className="btn-primary">
               CONTINUE SHOPPING →
             </Link>
@@ -103,7 +149,9 @@ function LoginForm() {
             />
           </div>
           
-          <button type="submit" className={styles.submitBtn}>Sign In</button>
+          <button type="submit" className={styles.submitBtn} disabled={submitting}>
+            {submitting ? 'Signing In...' : 'Sign In'}
+          </button>
         </form>
         
         <div className={styles.links}>
