@@ -205,3 +205,12 @@ button {
   color: #000000;
   transform: translateY(-2px);
 }
+
+/* Hide Next.js dev overlay badge */
+[data-nextjs-toast],
+[data-nextjs-dialog-overlay],
+nextjs-portal,
+#__next-build-watcher,
+#next-logo {
+  display: none !important;
+}

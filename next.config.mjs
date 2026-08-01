@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  devIndicators: false,
   images: {
     // Serve modern formats (WebP/AVIF) automatically — massively reduces image size
     formats: ['image/avif', 'image/webp'],
