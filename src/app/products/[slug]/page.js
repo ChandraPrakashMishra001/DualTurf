@@ -209,7 +209,8 @@ export default function ProductDetailPage() {
               </button>
               {openAccordion === 'support' && (
                 <div className={styles.accordionContent}>
-                  <p>• Email: support@dualturf.in</p>
+                  <p>• Email: turfdual@gmail.com</p>
+                  <p>• Phone / WhatsApp: +91-7656072801</p>
                   <p>• Support Hours: Mon–Sat, 10 AM–6 PM IST</p>
                 </div>
               )}

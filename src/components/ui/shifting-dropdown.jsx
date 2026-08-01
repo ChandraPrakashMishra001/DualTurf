@@ -392,8 +392,4 @@ const TABS = [
     title: "Retro & Full Sets",
     Component: RetroSets,
   },
-  {
-    title: "International & Sale",
-    Component: InternationalClearance,
-  },
 ].map((n, idx) => ({ ...n, id: idx + 1 }));

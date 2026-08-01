@@ -66,7 +66,7 @@ export default function Footer() {
 
             <div className={styles.socialRow}>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/dualturf?igsh=djAxYnlwOWs2NWM3"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"

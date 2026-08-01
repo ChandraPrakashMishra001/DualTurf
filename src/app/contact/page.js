@@ -44,7 +44,12 @@ export default function ContactPage() {
         <div className={styles.infoSection}>
           <div className={styles.infoCard}>
             <h3>Email</h3>
-            <p>support@dualturf.in</p>
+            <p><a href="mailto:turfdual@gmail.com" style={{ color: '#fff', textDecoration: 'underline' }}>turfdual@gmail.com</a></p>
+          </div>
+
+          <div className={styles.infoCard}>
+            <h3>Phone / WhatsApp</h3>
+            <p><a href="tel:+917656072801" style={{ color: '#fff', textDecoration: 'underline' }}>+91-7656072801</a></p>
           </div>
           
           <div className={styles.infoCard}>
@@ -55,9 +60,14 @@ export default function ContactPage() {
           
           <div className={styles.infoCard}>
             <h3>Follow us</h3>
-            <a href="#" className={styles.socialLink}>Instagram</a>
-            <a href="#" className={styles.socialLink}>Twitter / X</a>
-            <a href="#" className={styles.socialLink}>Facebook</a>
+            <a 
+              href="https://www.instagram.com/dualturf?igsh=djAxYnlwOWs2NWM3" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className={styles.socialLink}
+            >
+              Instagram (@dualturf) ↗
+            </a>
           </div>
         </div>
       </div>
