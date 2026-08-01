@@ -10,9 +10,15 @@ export const metadata = {
   description: 'Shop official and replica football jerseys, retro classics, anthem jackets, and international kits across India.',
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+}
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
         <SmoothScroll>
           <CartProvider>

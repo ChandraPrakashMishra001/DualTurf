@@ -3,13 +3,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root {
   --bg-color: #0a0a0a;
   --bg-card: #111111;
   --bg-hover: #171717;
   --text-primary: #ffffff;
-  --text-muted: rgba(255, 255, 255, 0.6);
-  --text-dark: rgba(255, 255, 255, 0.4);
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-dark: rgba(255, 255, 255, 0.45);
   --border-color: rgba(255, 255, 255, 0.1);
   --accent-color: #c4ff3d;
   --accent-hover: #d5ff5c;
@@ -34,10 +35,13 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   scroll-behavior: smooth;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -46,7 +50,9 @@ body {
   font-family: var(--font-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  touch-action: manipulation;
 }
 
 .font-display {
@@ -65,13 +71,13 @@ button {
   background: none;
   font-family: inherit;
   color: inherit;
+  touch-action: manipulation;
 }
 
 /* Custom Text Stroke Style for Headings */
 .text-stroke {
   color: transparent;
   -webkit-text-stroke: 1.5px #ffffff;
-  text-stroke: 1.5px #ffffff;
   transition: var(--transition-smooth);
 }
 
@@ -100,13 +106,14 @@ button {
 
 /* Marquee Animations */
 @keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
 .animate-marquee {
   display: flex;
   width: max-content;
+  will-change: transform;
   animation: marquee 25s linear infinite;
 }
 
@@ -114,29 +121,33 @@ button {
   animation-play-state: paused;
 }
 
-/* Card Hover Zoom */
+/* Card Hover Zoom & Mobile Optimizations */
 .product-card {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
-.product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
+@media (min-width: 768px) {
+  .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
+  }
 }
 
 .product-card-img {
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .product-card:hover .product-card-img {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 /* Utilities */
 .container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
 }
 
 @media (min-width: 768px) {
@@ -153,18 +164,20 @@ button {
   gap: 0.5rem;
   background-color: var(--accent-color);
   color: #000000;
-  padding: 0.75rem 2rem;
+  padding: 0.85rem 2rem;
   border-radius: var(--radius-sm);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 0.875rem;
+  min-height: 44px;
   transition: var(--transition-smooth);
+  will-change: transform;
 }
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 12px 24px -5px rgba(196, 255, 61, 0.4);
 }
 
@@ -176,17 +189,19 @@ button {
   background-color: transparent;
   color: var(--accent-color);
   border: 1px solid var(--accent-color);
-  padding: 0.75rem 2rem;
+  padding: 0.85rem 2rem;
   border-radius: var(--radius-sm);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 0.875rem;
+  min-height: 44px;
   transition: var(--transition-smooth);
+  will-change: transform;
 }
 
 .btn-outline:hover {
   background-color: var(--accent-color);
   color: #000000;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
