@@ -50,7 +50,9 @@ function LoginForm() {
       setSuccessMsg('Signed in with Google!');
     } catch (err) {
       let msg = err.message || 'Google sign-in failed. Please try again.';
-      if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
+      if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+        msg = '⚠️ Google Provider is currently disabled in Firebase. Enable Google under Firebase Console → Authentication → Sign-in method.';
+      } else if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
         msg = '⚠️ Google Sign-In requires authorizing dualturf.in in Firebase Console → Authentication → Settings → Authorized domains.';
       }
       setError(msg);
