@@ -15,6 +15,7 @@ export default function CartPage() {
   // Checkout step state: 'cart' | 'address' | 'upi' | 'confirmed'
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
+  const [utrError, setUtrError] = useState(null)
 
   // Shipping Form State
   const [formData, setFormData] = useState({
@@ -43,6 +44,15 @@ export default function CartPage() {
 
   const handlePaymentConfirm = async (e) => {
     e.preventDefault()
+    setUtrError(null)
+
+    // Strict 12-digit UTR validation to close non-payment loophole
+    const cleanUtr = utr.trim()
+    if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
+      setUtrError('Please enter a valid 12-digit numeric UTR / Transaction Reference number from your UPI app.')
+      return
+    }
+
     setSubmitting(true)
 
     const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
@@ -53,8 +63,8 @@ export default function CartPage() {
       subtotal,
       shippingFee,
       totalAmount,
-      utr: utr || 'Not Provided',
-      status: 'Pending Verification',
+      utr: cleanUtr,
+      status: 'Pending Payment Verification',
     }
 
     try {
@@ -81,7 +91,7 @@ export default function CartPage() {
   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${totalAmount}&cu=INR`
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`
 
-  // Format WhatsApp message for Seller (+91 98765 43210 or Seller number)
+  // Format WhatsApp message for Seller (+91-7656072801)
   const generateWhatsAppLink = () => {
     if (!placedOrder) return '#'
     const text = `⚽ *NEW DUALTURF ORDER #${placedOrder.orderId}*
@@ -100,11 +110,13 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
 💳 *Payment Summary:*
 • Subtotal: ₹${placedOrder.subtotal}
 • Shipping Fee: ₹${placedOrder.shippingFee || 80}
-• Total Paid: ₹${placedOrder.totalAmount || placedOrder.subtotal + 80}
-• UPI VPA: ${upiId}
-• UTR / Ref ID: ${placedOrder.utr}`
+• Total Amount: ₹${placedOrder.totalAmount || placedOrder.subtotal + 80}
+• Payee VPA: ${upiId}
+• 12-Digit UTR / Ref ID: ${placedOrder.utr}
 
-    return `https://wa.me/919876543210?text=${encodeURIComponent(text)}`
+⚠️ *Note:* Payment verification requested. Please verify this UTR before dispatching.`
+
+    return `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
   }
 
   return (
@@ -118,105 +130,104 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
         <div className={styles.stepLine} />
         <div className={`${styles.stepNode} ${step === 'address' ? styles.activeNode : ''} ${step === 'upi' || step === 'confirmed' ? styles.completedNode : ''}`}>
           <span>2</span>
-          <p>Shipping</p>
+          <p>Address</p>
         </div>
         <div className={styles.stepLine} />
         <div className={`${styles.stepNode} ${step === 'upi' ? styles.activeNode : ''} ${step === 'confirmed' ? styles.completedNode : ''}`}>
           <span>3</span>
-          <p>UPI Payment</p>
+          <p>Payment</p>
+        </div>
+        <div className={styles.stepLine} />
+        <div className={`${styles.stepNode} ${step === 'confirmed' ? styles.activeNode : ''}`}>
+          <span>4</span>
+          <p>Confirmation</p>
         </div>
       </div>
 
-      {/* STEP 1: CART REVIEW */}
+      {/* STEP 1: CART ITEMS LIST */}
       {step === 'cart' && (
         <>
-          <h1 className="font-display title-underline" style={{ fontSize: '3.5rem', marginBottom: '2.5rem', textAlign: 'center' }}>
-            YOUR CART
-          </h1>
+          <div className={styles.cartHeader}>
+            <h1 className="font-display title-underline" style={{ fontSize: '3rem' }}>
+              YOUR BAG ({cart.length})
+            </h1>
+          </div>
 
           {cart.length === 0 ? (
-            <div className={styles.emptyCart}>
-              <p>Your cart is currently empty.</p>
+            <div className={styles.emptyCartBox}>
+              <h2>Your bag is currently empty.</h2>
+              <p>Explore our premium 2026-27 season kits and retro jerseys to get started!</p>
               <Link href="/collections/all" className="btn-primary" style={{ marginTop: '1.5rem' }}>
-                CONTINUE SHOPPING →
+                EXPLORE ALL KITS →
               </Link>
             </div>
           ) : (
             <div className={styles.cartLayout}>
-              <div className={styles.cartItems}>
-                <div className={styles.tableHeader}>
-                  <div>Product</div>
-                  <div>Price</div>
-                  <div>Quantity</div>
-                  <div>Total</div>
-                </div>
-
+              <div className={styles.itemList}>
                 {cart.map((item, idx) => (
-                  <div key={`${item.id}-${item.size}-${idx}`} className={styles.cartRow}>
-                    <div className={styles.colProduct}>
-                      <img src={item.image} alt={item.title} className={styles.itemImage} />
-                      <div>
-                        <h3 className={styles.itemName}>{item.title}</h3>
-                        <p className={styles.itemVariant}>Size: {item.size}</p>
-                        <button
-                          className={styles.removeBtn}
-                          onClick={() => removeFromCart(item.id, item.size)}
-                        >
-                          Remove
-                        </button>
-                      </div>
+                  <div key={`${item.id}-${item.size}-${idx}`} className={styles.itemRow}>
+                    <img src={item.image} alt={item.title} className={styles.itemImg} />
+                    <div className={styles.itemInfo}>
+                      <h3 className={styles.itemTitle}>{item.title}</h3>
+                      <p className={styles.itemSize}>Size: <strong>{item.size}</strong></p>
+                      <p className={styles.itemPrice}>₹{item.price}</p>
                     </div>
-                    <div className={styles.colPrice}>₹{item.price}</div>
-                    <div className={styles.colQuantity}>
-                      <div className={styles.qtyBox}>
-                        <button onClick={() => updateQuantity(item.id, item.size, -1)}>-</button>
-                        <span>{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.size, 1)}>+</button>
-                      </div>
+
+                    <div className={styles.qtyControl}>
+                      <button onClick={() => updateQuantity(item.id, item.size, -1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.size, 1)}>+</button>
                     </div>
-                    <div className={styles.colTotal}>₹{item.price * item.quantity}</div>
+
+                    <div className={styles.lineTotal}>
+                      ₹{item.price * item.quantity}
+                    </div>
+
+                    <button
+                      className={styles.removeBtn}
+                      onClick={() => removeFromCart(item.id, item.size)}
+                      title="Remove item"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
               </div>
 
+              {/* Order Summary Sidebar */}
               <div className={styles.summaryCard}>
-                <h2 className="font-display" style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>
-                  ORDER SUMMARY
-                </h2>
+                <h3 className={styles.summaryTitle}>ORDER SUMMARY</h3>
                 <div className={styles.summaryRow}>
                   <span>Subtotal</span>
                   <span>₹{subtotal}</span>
                 </div>
                 <div className={styles.summaryRow}>
-                  <span>Shipping Fee</span>
-                  <span style={{ color: '#fff', fontWeight: 600 }}>₹{shippingFee}</span>
+                  <span>Flat Express Shipping</span>
+                  <span>₹{shippingFee}</span>
                 </div>
-                <div className={styles.summaryTotal}>
+                <hr className={styles.divider} />
+                <div className={`${styles.summaryRow} ${styles.totalRow}`}>
                   <span>Total Amount</span>
-                  <span style={{ color: 'var(--accent-color)', fontSize: '1.5rem' }}>₹{totalAmount}</span>
+                  <span>₹{totalAmount}</span>
                 </div>
 
                 <button
                   className="btn-primary"
-                  style={{ width: '100%', height: '52px', marginTop: '1.5rem' }}
+                  style={{ width: '100%', marginTop: '1.5rem' }}
                   onClick={() => setStep('address')}
                 >
                   PROCEED TO SHIPPING →
                 </button>
-
-                <Link href="/collections/all" className={styles.continueLink}>
-                  Continue Shopping
-                </Link>
               </div>
             </div>
           )}
         </>
       )}
 
-      {/* STEP 2: SHIPPING & ADDRESS FORM */}
+      {/* STEP 2: SHIPPING ADDRESS FORM */}
       {step === 'address' && (
         <div className={styles.formContainer}>
-          <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '2rem', textAlign: 'center' }}>
+          <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '2rem' }}>
             SHIPPING ADDRESS
           </h1>
 
@@ -235,7 +246,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label>Phone / WhatsApp Number *</label>
+                <label>Phone Number *</label>
                 <input
                   type="tel"
                   name="phone"
@@ -245,7 +256,6 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                   onChange={handleInputChange}
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Email Address *</label>
                 <input
@@ -260,12 +270,12 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             </div>
 
             <div className={styles.formGroup}>
-              <label>Flat / House No. / Building / Street Address *</label>
-              <input
-                type="text"
+              <label>Complete Delivery Address (House No, Street, Landmark) *</label>
+              <textarea
                 name="address"
                 required
-                placeholder="Apartment name, Street area"
+                rows="3"
+                placeholder="Full delivery address"
                 value={formData.address}
                 onChange={handleInputChange}
               />
@@ -278,24 +288,22 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                   type="text"
                   name="city"
                   required
-                  placeholder="Mumbai"
+                  placeholder="City"
                   value={formData.city}
                   onChange={handleInputChange}
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>State *</label>
                 <input
                   type="text"
                   name="state"
                   required
-                  placeholder="Maharashtra"
+                  placeholder="State"
                   value={formData.state}
                   onChange={handleInputChange}
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Pincode *</label>
                 <input
@@ -303,7 +311,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                   name="pincode"
                   required
                   pattern="[0-9]{6}"
-                  placeholder="400001"
+                  placeholder="6-digit Pincode"
                   value={formData.pincode}
                   onChange={handleInputChange}
                 />
@@ -329,7 +337,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             SCAN & PAY VIA UPI
           </h1>
           <p className={styles.upiSubtext}>
-            Scan the generated QR code below with any UPI App (GPay, PhonePe, Paytm, BHIM, CRED).
+            Scan the QR code below with any UPI App (GPay, PhonePe, Paytm, BHIM, CRED).
           </p>
 
           <div className={styles.upiBox}>
@@ -355,7 +363,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                 <strong>₹{subtotal}</strong>
               </div>
               <div className={styles.detailRow}>
-                <span>Shipping Fee:</span>
+                <span>Flat Express Shipping:</span>
                 <strong>₹{shippingFee}</strong>
               </div>
               <div className={styles.detailRow}>
@@ -366,20 +374,50 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               <hr className={styles.divider} />
 
               <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
-                <label>UPI Reference No. / UTR (Optional)</label>
+                <label style={{ fontWeight: '700', color: 'var(--accent-color)' }}>
+                  Enter 12-Digit UPI UTR / Ref No. *
+                </label>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                  Open your UPI app after paying ₹{totalAmount} to copy the 12-digit UTR/Ref ID.
+                </p>
+
+                {utrError && (
+                  <div style={{ backgroundColor: 'rgba(255, 85, 85, 0.15)', border: '1px solid #ff5555', color: '#ff7777', padding: '0.75rem 1rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                    {utrError}
+                  </div>
+                )}
+
                 <input
                   type="text"
-                  placeholder="Enter 12-digit UTR or Transaction ID"
+                  required
+                  maxLength={12}
+                  minLength={12}
+                  pattern="\d{12}"
+                  placeholder="Enter 12-digit UTR (e.g. 420819482019)"
                   value={utr}
-                  onChange={(e) => setUtr(e.target.value)}
+                  onChange={(e) => {
+                    setUtr(e.target.value.replace(/\D/g, ''))
+                    setUtrError(null)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    borderRadius: '4px',
+                    border: '1px solid var(--accent-color)',
+                    backgroundColor: '#0a0a0a',
+                    color: '#ffffff',
+                    fontSize: '1rem',
+                    letterSpacing: '0.1em',
+                    fontFamily: 'monospace',
+                  }}
                 />
 
-                <div className={styles.formActions}>
+                <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
                   <button type="button" className="btn-outline" onClick={() => setStep('address')}>
                     ← Edit Address
                   </button>
                   <button type="submit" className="btn-primary" disabled={submitting}>
-                    {submitting ? 'RECORDING ORDER...' : 'CONFIRM & PLACE ORDER ✓'}
+                    {submitting ? 'VERIFYING UTR...' : 'SUBMIT UTR & PLACE ORDER ✓'}
                   </button>
                 </div>
               </form>
@@ -388,53 +426,51 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
         </div>
       )}
 
-      {/* STEP 4: ORDER CONFIRMED & SELLER DISPATCH */}
+      {/* STEP 4: ORDER CONFIRMED & SELLER VERIFICATION */}
       {step === 'confirmed' && placedOrder && (
         <div className={styles.confirmedBox}>
           <div className={styles.successIcon}>✓</div>
-          <h1 className="font-display" style={{ fontSize: '3.5rem', color: 'var(--accent-color)' }}>
-            ORDER CONFIRMED!
+          <h1 className="font-display" style={{ fontSize: '3rem', color: 'var(--accent-color)' }}>
+            ORDER PLACED!
           </h1>
           <p className={styles.orderIdText}>
-            Order ID: <strong>#{orderId}</strong>
-          </p>
-          <p className={styles.confirmedSub}>
-            Thank you, <strong>{placedOrder.customer.fullName}</strong>! Your order details have been sent to the seller database.
+            Order Reference ID: <strong>#{orderId}</strong>
           </p>
 
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '2rem' }}>
+          <div style={{ backgroundColor: 'rgba(196, 255, 61, 0.1)', border: '1px solid var(--accent-color)', borderRadius: '8px', padding: '1.25rem', margin: '1.5rem 0', textAlign: 'left' }}>
+            <h3 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+              ⚠️ Final Step: Verify Payment via WhatsApp
+            </h3>
+            <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
+              Your order has been recorded with UTR <strong>{placedOrder.utr}</strong>.
+            </p>
+            <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
+              Click the button below to send your payment screenshot & details to DualTurf WhatsApp support to verify and dispatch your order.
+            </p>
+          </div>
+
+          <div className={styles.confirmedDetails}>
+            <h3>Shipping Details:</h3>
+            <p><strong>{placedOrder.customer.fullName}</strong> ({placedOrder.customer.phone})</p>
+            <p>{placedOrder.customer.address}, {placedOrder.customer.city}, {placedOrder.customer.state} - {placedOrder.customer.pincode}</p>
+            <p style={{ marginTop: '0.75rem' }}>Total Paid: <strong>₹{placedOrder.totalAmount}</strong> (via UPI UTR: {placedOrder.utr})</p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column', marginTop: '2rem' }}>
             <a
               href={generateWhatsAppLink()}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary"
-              style={{ backgroundColor: '#25D366', color: '#000000' }}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.1rem 2rem', fontSize: '1rem' }}
             >
-              📱 SEND ORDER CONFIRMATION TO SELLER VIA WHATSAPP →
+              📱 SEND PAYMENT PROOF TO WHATSAPP (+91-7656072801) →
             </a>
 
-            <Link href="/admin/orders" className="btn-outline" target="_blank">
-              ⚙️ View Order in Seller Dashboard
+            <Link href="/collections/all" className="btn-outline" style={{ marginTop: '0.5rem' }}>
+              CONTINUE SHOPPING
             </Link>
           </div>
-
-          <div className={styles.deliveryCard}>
-            <h3>Shipping Address & Details:</h3>
-            <p><strong>Name:</strong> {placedOrder.customer.fullName}</p>
-            <p><strong>Phone:</strong> {placedOrder.customer.phone}</p>
-            <p><strong>Address:</strong> {placedOrder.customer.address}, {placedOrder.customer.city}, {placedOrder.customer.state} - {placedOrder.customer.pincode}</p>
-            <p><strong>Subtotal:</strong> ₹{placedOrder.subtotal}</p>
-            <p><strong>Shipping Fee:</strong> ₹{placedOrder.shippingFee || 80}</p>
-            <p><strong>Total Paid:</strong> ₹{placedOrder.totalAmount || placedOrder.subtotal + 80}</p>
-            <p><strong>Payment UTR:</strong> {placedOrder.utr}</p>
-            <p style={{ marginTop: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>
-              🚚 Dispatches in 48 Hours via Express Courier
-            </p>
-          </div>
-
-          <Link href="/" className="btn-primary" style={{ marginTop: '2rem' }}>
-            BACK TO HOMEPAGE →
-          </Link>
         </div>
       )}
     </div>
