@@ -8,18 +8,17 @@ import styles from './page.module.css'
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
 
-  // Payment method selection: 'upi' | 'cod'
-  const [paymentMethod, setPaymentMethod] = useState('upi')
+  // Payment method selection: 'gateway' | 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('gateway')
 
   // Shipping Fee configuration
   const shippingFee = cart.length > 0 ? 80 : 0
-  const codFee = paymentMethod === 'cod' ? 0 : 0 // Flat shipping ₹80 applies to all
-  const totalAmount = subtotal + shippingFee + codFee
+  const totalAmount = subtotal + shippingFee
 
-  // Checkout step state: 'cart' | 'address' | 'payment' | 'confirmed'
+  // Checkout step state: 'cart' | 'address' | 'payment' | 'gateway_pending' | 'confirmed'
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
-  const [utrError, setUtrError] = useState(null)
+  const [gatewayNotice, setGatewayNotice] = useState(null)
 
   // Shipping Form State
   const [formData, setFormData] = useState({
@@ -32,8 +31,7 @@ export default function CartPage() {
     pincode: '',
   })
 
-  // UTR / Transaction Reference & Created Order
-  const [utr, setUtr] = useState('')
+  // Created Order State
   const [orderId, setOrderId] = useState('')
   const [placedOrder, setPlacedOrder] = useState(null)
 
@@ -46,22 +44,22 @@ export default function CartPage() {
     setStep('payment')
   }
 
-  const handlePaymentConfirm = async (e) => {
+  const handleInitiatePaymentGateway = async (e) => {
     e.preventDefault()
-    setUtrError(null)
+    setSubmitting(true)
+    setGatewayNotice(null)
 
-    const cleanUtr = utr.trim()
-
-    // If UPI payment selected, enforce strict 12-digit UTR validation
-    if (paymentMethod === 'upi') {
-      if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
-        setUtrError('Please enter a valid 12-digit numeric UTR / Transaction Reference number from your UPI app.')
-        return
-      }
+    // Check if Razorpay / Payment Gateway script or API key is active
+    if (paymentMethod === 'gateway') {
+      // Pause automatic order confirmation until payment gateway credentials are added
+      setTimeout(() => {
+        setGatewayNotice('⚠️ Payment Gateway Integration in Progress: Please add your Razorpay / PhonePe / Cashfree API credentials to process live instant payments.')
+        setSubmitting(false)
+      }, 1000)
+      return
     }
 
-    setSubmitting(true)
-
+    // COD Flow
     const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
     const orderPayload = {
       orderId: generatedId,
@@ -70,13 +68,11 @@ export default function CartPage() {
       subtotal,
       shippingFee,
       totalAmount,
-      paymentMethod: paymentMethod === 'upi' ? 'UPI Online' : 'Cash on Delivery (COD)',
-      utr: paymentMethod === 'upi' ? cleanUtr : 'N/A (Cash on Delivery)',
-      status: paymentMethod === 'upi' ? 'Pending Payment Verification' : 'COD Order - Awaiting Dispatch',
+      paymentMethod: 'Cash on Delivery (COD)',
+      status: 'COD Order - Awaiting Dispatch',
     }
 
     try {
-      // POST order to backend API route /api/orders
       await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,12 +88,6 @@ export default function CartPage() {
       clearCart()
     }
   }
-
-  // UPI URL & QR Code API
-  const upiId = 'dualturf@upi'
-  const payeeName = 'DualTurf Store'
-  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${totalAmount}&cu=INR`
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`
 
   // Format WhatsApp message for Seller (+91-7656072801)
   const generateWhatsAppLink = () => {
@@ -115,12 +105,11 @@ ${placedOrder.customer.address}, ${placedOrder.customer.city}, ${placedOrder.cus
 🛍️ *Items Ordered:*
 ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
 
-💳 *Payment Details:*
+💳 *Payment Summary:*
 • Payment Mode: ${placedOrder.paymentMethod}
 • Subtotal: ₹${placedOrder.subtotal}
 • Shipping Fee: ₹${placedOrder.shippingFee || 80}
-• Total Amount: ₹${placedOrder.totalAmount}
-• UTR / Ref ID: ${placedOrder.utr}`
+• Total Amount: ₹${placedOrder.totalAmount}`
 
     return `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
   }
@@ -329,29 +318,28 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                 ← Back to Bag
               </button>
               <button type="submit" className="btn-primary">
-                SELECT PAYMENT METHOD →
+                PROCEED TO PAYMENT →
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* STEP 3: SELECT PAYMENT METHOD (UPI OR COD) */}
+      {/* STEP 3: PAYMENT GATEWAY INTERFACE */}
       {step === 'payment' && (
         <div className={styles.upiContainer}>
           <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            CHOOSE PAYMENT METHOD
+            PAYMENT GATEWAY
           </h1>
 
-          {/* Payment Method Selector Tabs */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
             <button
               type="button"
-              onClick={() => setPaymentMethod('upi')}
+              onClick={() => setPaymentMethod('gateway')}
               style={{
-                backgroundColor: paymentMethod === 'upi' ? 'var(--accent-color)' : '#111111',
-                color: paymentMethod === 'upi' ? '#000000' : '#ffffff',
-                border: paymentMethod === 'upi' ? '2px solid var(--accent-color)' : '1px solid #333333',
+                backgroundColor: paymentMethod === 'gateway' ? 'var(--accent-color)' : '#111111',
+                color: paymentMethod === 'gateway' ? '#000000' : '#ffffff',
+                border: paymentMethod === 'gateway' ? '2px solid var(--accent-color)' : '1px solid #333333',
                 padding: '1.25rem 1rem',
                 borderRadius: '8px',
                 fontWeight: '700',
@@ -361,8 +349,8 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                 transition: 'all 0.2s ease',
               }}
             >
-              📱 UPI QR / Online
-              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>GPay, PhonePe, Paytm, BHIM</span>
+              🔒 Online Payment Gateway
+              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Razorpay / PhonePe / UPI / Cards</span>
             </button>
 
             <button
@@ -382,136 +370,45 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               }}
             >
               💵 Cash on Delivery
-              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Pay Cash Upon Delivery</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Pay Cash Upon Arrival</span>
             </button>
           </div>
 
-          {/* OPTION A: UPI PAYMENT */}
-          {paymentMethod === 'upi' && (
-            <div className={styles.upiBox}>
-              <div className={styles.qrSection}>
-                <div className={styles.qrCard}>
-                  <img src={qrCodeApiUrl} alt="UPI QR Code" className={styles.qrCodeImg} />
-                  <span className={styles.amountBadge}>Amount to Pay: ₹{totalAmount}</span>
-                </div>
-                <p className={styles.qrHint}>Supports GPay • PhonePe • Paytm • BHIM • CRED</p>
+          <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
+            <div className={styles.upiDetails}>
+              <div className={styles.detailRow}>
+                <span>Subtotal:</span>
+                <strong>₹{subtotal}</strong>
+              </div>
+              <div className={styles.detailRow}>
+                <span>Flat Express Shipping:</span>
+                <strong>₹{shippingFee}</strong>
+              </div>
+              <div className={styles.detailRow}>
+                <span>Total Payable Amount:</span>
+                <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
               </div>
 
-              <div className={styles.upiDetails}>
-                <div className={styles.detailRow}>
-                  <span>Payee VPA:</span>
-                  <strong className={styles.upiId}>{upiId}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Payee Name:</span>
-                  <strong>{payeeName}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Subtotal:</span>
-                  <strong>₹{subtotal}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Flat Express Shipping:</span>
-                  <strong>₹{shippingFee}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Total Amount:</span>
-                  <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
-                </div>
+              <hr className={styles.divider} />
 
-                <hr className={styles.divider} />
+              {gatewayNotice && (
+                <div style={{ backgroundColor: 'rgba(255, 184, 0, 0.15)', border: '1px solid #FFB800', color: '#FFD700', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  {gatewayNotice}
+                </div>
+              )}
 
-                <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
-                  <label style={{ fontWeight: '700', color: 'var(--accent-color)' }}>
-                    Enter 12-Digit UPI UTR / Ref No. *
-                  </label>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                    Open your UPI app after paying ₹{totalAmount} to copy the 12-digit UTR/Ref ID.
-                  </p>
-
-                  {utrError && (
-                    <div style={{ backgroundColor: 'rgba(255, 85, 85, 0.15)', border: '1px solid #ff5555', color: '#ff7777', padding: '0.75rem 1rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                      {utrError}
-                    </div>
-                  )}
-
-                  <input
-                    type="text"
-                    required
-                    maxLength={12}
-                    minLength={12}
-                    pattern="\d{12}"
-                    placeholder="Enter 12-digit UTR (e.g. 420819482019)"
-                    value={utr}
-                    onChange={(e) => {
-                      setUtr(e.target.value.replace(/\D/g, ''))
-                      setUtrError(null)
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '1rem',
-                      borderRadius: '4px',
-                      border: '1px solid var(--accent-color)',
-                      backgroundColor: '#0a0a0a',
-                      color: '#ffffff',
-                      fontSize: '1rem',
-                      letterSpacing: '0.1em',
-                      fontFamily: 'monospace',
-                    }}
-                  />
-
-                  <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
-                    <button type="button" className="btn-outline" onClick={() => setStep('address')}>
-                      ← Edit Address
-                    </button>
-                    <button type="submit" className="btn-primary" disabled={submitting}>
-                      {submitting ? 'VERIFYING UTR...' : 'SUBMIT UTR & PLACE ORDER ✓'}
-                    </button>
-                  </div>
-                </form>
-              </div>
+              <form onSubmit={handleInitiatePaymentGateway} className={styles.utrForm}>
+                <div className={styles.formActions}>
+                  <button type="button" className="btn-outline" onClick={() => setStep('address')}>
+                    ← Edit Address
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={submitting}>
+                    {submitting ? 'INITIATING PAYMENT...' : paymentMethod === 'gateway' ? `PAY ₹${totalAmount} VIA GATEWAY →` : 'PLACE COD ORDER →'}
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-
-          {/* OPTION B: CASH ON DELIVERY (COD) */}
-          {paymentMethod === 'cod' && (
-            <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
-              <div className={styles.upiDetails}>
-                <h3 style={{ color: 'var(--accent-color)', marginBottom: '1rem', fontSize: '1.25rem' }}>
-                  💵 CASH ON DELIVERY (COD)
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                  Pay cash directly to the courier delivery executive upon arrival at your doorstep.
-                </p>
-
-                <div className={styles.detailRow}>
-                  <span>Subtotal:</span>
-                  <strong>₹{subtotal}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Flat Express Shipping:</span>
-                  <strong>₹{shippingFee}</strong>
-                </div>
-                <div className={styles.detailRow}>
-                  <span>Total Amount to Pay on Delivery:</span>
-                  <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
-                </div>
-
-                <hr className={styles.divider} />
-
-                <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
-                  <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
-                    <button type="button" className="btn-outline" onClick={() => setStep('address')}>
-                      ← Edit Address
-                    </button>
-                    <button type="submit" className="btn-primary" disabled={submitting}>
-                      {submitting ? 'PLACING COD ORDER...' : 'CONFIRM CASH ON DELIVERY ORDER ✓'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -520,22 +417,11 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
         <div className={styles.confirmedBox}>
           <div className={styles.successIcon}>✓</div>
           <h1 className="font-display" style={{ fontSize: '3rem', color: 'var(--accent-color)' }}>
-            {placedOrder.paymentMethod.includes('COD') ? 'COD ORDER PLACED!' : 'UPI ORDER PLACED!'}
+            ORDER PLACED!
           </h1>
           <p className={styles.orderIdText}>
             Order Reference ID: <strong>#{orderId}</strong>
           </p>
-
-          <div style={{ backgroundColor: 'rgba(196, 255, 61, 0.1)', border: '1px solid var(--accent-color)', borderRadius: '8px', padding: '1.25rem', margin: '1.5rem 0', textAlign: 'left' }}>
-            <h3 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
-              {placedOrder.paymentMethod.includes('COD') ? '💵 Cash on Delivery Confirmation' : '⚠️ Final Step: Verify Payment via WhatsApp'}
-            </h3>
-            <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
-              {placedOrder.paymentMethod.includes('COD')
-                ? `Please keep ₹${placedOrder.totalAmount} cash ready for delivery. Our team will contact you before dispatch.`
-                : `Your order has been recorded with UTR ${placedOrder.utr}. Please send details to WhatsApp support.`}
-            </p>
-          </div>
 
           <div className={styles.confirmedDetails}>
             <h3>Shipping & Order Details:</h3>
