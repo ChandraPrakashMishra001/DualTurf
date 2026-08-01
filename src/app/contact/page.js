@@ -109,8 +109,8 @@ ${formData.message}`;
           
           <div className={styles.infoCard}>
             <h3>Location</h3>
-            <p>Mumbai, MH</p>
-            <p>India</p>
+            <p>Burla, Sambalpur</p>
+            <p>Odisha, India</p>
           </div>
           
           <div className={styles.infoCard}>
