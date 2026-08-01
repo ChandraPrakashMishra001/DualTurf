@@ -8,11 +8,15 @@ import styles from './page.module.css'
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
 
+  // Payment method selection: 'upi' | 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('upi')
+
   // Shipping Fee configuration
   const shippingFee = cart.length > 0 ? 80 : 0
-  const totalAmount = subtotal + shippingFee
+  const codFee = paymentMethod === 'cod' ? 0 : 0 // Flat shipping ₹80 applies to all
+  const totalAmount = subtotal + shippingFee + codFee
 
-  // Checkout step state: 'cart' | 'address' | 'upi' | 'confirmed'
+  // Checkout step state: 'cart' | 'address' | 'payment' | 'confirmed'
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
   const [utrError, setUtrError] = useState(null)
@@ -39,18 +43,21 @@ export default function CartPage() {
 
   const handleAddressSubmit = (e) => {
     e.preventDefault()
-    setStep('upi')
+    setStep('payment')
   }
 
   const handlePaymentConfirm = async (e) => {
     e.preventDefault()
     setUtrError(null)
 
-    // Strict 12-digit UTR validation to close non-payment loophole
     const cleanUtr = utr.trim()
-    if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
-      setUtrError('Please enter a valid 12-digit numeric UTR / Transaction Reference number from your UPI app.')
-      return
+
+    // If UPI payment selected, enforce strict 12-digit UTR validation
+    if (paymentMethod === 'upi') {
+      if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
+        setUtrError('Please enter a valid 12-digit numeric UTR / Transaction Reference number from your UPI app.')
+        return
+      }
     }
 
     setSubmitting(true)
@@ -63,8 +70,9 @@ export default function CartPage() {
       subtotal,
       shippingFee,
       totalAmount,
-      utr: cleanUtr,
-      status: 'Pending Payment Verification',
+      paymentMethod: paymentMethod === 'upi' ? 'UPI Online' : 'Cash on Delivery (COD)',
+      utr: paymentMethod === 'upi' ? cleanUtr : 'N/A (Cash on Delivery)',
+      status: paymentMethod === 'upi' ? 'Pending Payment Verification' : 'COD Order - Awaiting Dispatch',
     }
 
     try {
@@ -107,14 +115,12 @@ ${placedOrder.customer.address}, ${placedOrder.customer.city}, ${placedOrder.cus
 🛍️ *Items Ordered:*
 ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
 
-💳 *Payment Summary:*
+💳 *Payment Details:*
+• Payment Mode: ${placedOrder.paymentMethod}
 • Subtotal: ₹${placedOrder.subtotal}
 • Shipping Fee: ₹${placedOrder.shippingFee || 80}
-• Total Amount: ₹${placedOrder.totalAmount || placedOrder.subtotal + 80}
-• Payee VPA: ${upiId}
-• 12-Digit UTR / Ref ID: ${placedOrder.utr}
-
-⚠️ *Note:* Payment verification requested. Please verify this UTR before dispatching.`
+• Total Amount: ₹${placedOrder.totalAmount}
+• UTR / Ref ID: ${placedOrder.utr}`
 
     return `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
   }
@@ -128,12 +134,12 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
           <p>Bag</p>
         </div>
         <div className={styles.stepLine} />
-        <div className={`${styles.stepNode} ${step === 'address' ? styles.activeNode : ''} ${step === 'upi' || step === 'confirmed' ? styles.completedNode : ''}`}>
+        <div className={`${styles.stepNode} ${step === 'address' ? styles.activeNode : ''} ${step === 'payment' || step === 'confirmed' ? styles.completedNode : ''}`}>
           <span>2</span>
           <p>Address</p>
         </div>
         <div className={styles.stepLine} />
-        <div className={`${styles.stepNode} ${step === 'upi' ? styles.activeNode : ''} ${step === 'confirmed' ? styles.completedNode : ''}`}>
+        <div className={`${styles.stepNode} ${step === 'payment' ? styles.activeNode : ''} ${step === 'confirmed' ? styles.completedNode : ''}`}>
           <span>3</span>
           <p>Payment</p>
         </div>
@@ -323,115 +329,198 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                 ← Back to Bag
               </button>
               <button type="submit" className="btn-primary">
-                PROCEED TO UPI PAYMENT →
+                SELECT PAYMENT METHOD →
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* STEP 3: GENERATED UPI QR CODE & PAYMENT */}
-      {step === 'upi' && (
+      {/* STEP 3: SELECT PAYMENT METHOD (UPI OR COD) */}
+      {step === 'payment' && (
         <div className={styles.upiContainer}>
           <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            SCAN & PAY VIA UPI
+            CHOOSE PAYMENT METHOD
           </h1>
-          <p className={styles.upiSubtext}>
-            Scan the QR code below with any UPI App (GPay, PhonePe, Paytm, BHIM, CRED).
-          </p>
 
-          <div className={styles.upiBox}>
-            <div className={styles.qrSection}>
-              <div className={styles.qrCard}>
-                <img src={qrCodeApiUrl} alt="UPI QR Code" className={styles.qrCodeImg} />
-                <span className={styles.amountBadge}>Amount to Pay: ₹{totalAmount}</span>
+          {/* Payment Method Selector Tabs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('upi')}
+              style={{
+                backgroundColor: paymentMethod === 'upi' ? 'var(--accent-color)' : '#111111',
+                color: paymentMethod === 'upi' ? '#000000' : '#ffffff',
+                border: paymentMethod === 'upi' ? '2px solid var(--accent-color)' : '1px solid #333333',
+                padding: '1.25rem 1rem',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              📱 UPI QR / Online
+              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>GPay, PhonePe, Paytm, BHIM</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('cod')}
+              style={{
+                backgroundColor: paymentMethod === 'cod' ? 'var(--accent-color)' : '#111111',
+                color: paymentMethod === 'cod' ? '#000000' : '#ffffff',
+                border: paymentMethod === 'cod' ? '2px solid var(--accent-color)' : '1px solid #333333',
+                padding: '1.25rem 1rem',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              💵 Cash on Delivery
+              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Pay Cash Upon Delivery</span>
+            </button>
+          </div>
+
+          {/* OPTION A: UPI PAYMENT */}
+          {paymentMethod === 'upi' && (
+            <div className={styles.upiBox}>
+              <div className={styles.qrSection}>
+                <div className={styles.qrCard}>
+                  <img src={qrCodeApiUrl} alt="UPI QR Code" className={styles.qrCodeImg} />
+                  <span className={styles.amountBadge}>Amount to Pay: ₹{totalAmount}</span>
+                </div>
+                <p className={styles.qrHint}>Supports GPay • PhonePe • Paytm • BHIM • CRED</p>
               </div>
-              <p className={styles.qrHint}>Supports GPay • PhonePe • Paytm • BHIM • CRED</p>
+
+              <div className={styles.upiDetails}>
+                <div className={styles.detailRow}>
+                  <span>Payee VPA:</span>
+                  <strong className={styles.upiId}>{upiId}</strong>
+                </div>
+                <div className={styles.detailRow}>
+                  <span>Payee Name:</span>
+                  <strong>{payeeName}</strong>
+                </div>
+                <div className={styles.detailRow}>
+                  <span>Subtotal:</span>
+                  <strong>₹{subtotal}</strong>
+                </div>
+                <div className={styles.detailRow}>
+                  <span>Flat Express Shipping:</span>
+                  <strong>₹{shippingFee}</strong>
+                </div>
+                <div className={styles.detailRow}>
+                  <span>Total Amount:</span>
+                  <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
+                </div>
+
+                <hr className={styles.divider} />
+
+                <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
+                  <label style={{ fontWeight: '700', color: 'var(--accent-color)' }}>
+                    Enter 12-Digit UPI UTR / Ref No. *
+                  </label>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                    Open your UPI app after paying ₹{totalAmount} to copy the 12-digit UTR/Ref ID.
+                  </p>
+
+                  {utrError && (
+                    <div style={{ backgroundColor: 'rgba(255, 85, 85, 0.15)', border: '1px solid #ff5555', color: '#ff7777', padding: '0.75rem 1rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
+                      {utrError}
+                    </div>
+                  )}
+
+                  <input
+                    type="text"
+                    required
+                    maxLength={12}
+                    minLength={12}
+                    pattern="\d{12}"
+                    placeholder="Enter 12-digit UTR (e.g. 420819482019)"
+                    value={utr}
+                    onChange={(e) => {
+                      setUtr(e.target.value.replace(/\D/g, ''))
+                      setUtrError(null)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      borderRadius: '4px',
+                      border: '1px solid var(--accent-color)',
+                      backgroundColor: '#0a0a0a',
+                      color: '#ffffff',
+                      fontSize: '1rem',
+                      letterSpacing: '0.1em',
+                      fontFamily: 'monospace',
+                    }}
+                  />
+
+                  <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
+                    <button type="button" className="btn-outline" onClick={() => setStep('address')}>
+                      ← Edit Address
+                    </button>
+                    <button type="submit" className="btn-primary" disabled={submitting}>
+                      {submitting ? 'VERIFYING UTR...' : 'SUBMIT UTR & PLACE ORDER ✓'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
+          )}
 
-            <div className={styles.upiDetails}>
-              <div className={styles.detailRow}>
-                <span>Payee VPA:</span>
-                <strong className={styles.upiId}>{upiId}</strong>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Payee Name:</span>
-                <strong>{payeeName}</strong>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Subtotal:</span>
-                <strong>₹{subtotal}</strong>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Flat Express Shipping:</span>
-                <strong>₹{shippingFee}</strong>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Total Amount:</span>
-                <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
-              </div>
-
-              <hr className={styles.divider} />
-
-              <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
-                <label style={{ fontWeight: '700', color: 'var(--accent-color)' }}>
-                  Enter 12-Digit UPI UTR / Ref No. *
-                </label>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                  Open your UPI app after paying ₹{totalAmount} to copy the 12-digit UTR/Ref ID.
+          {/* OPTION B: CASH ON DELIVERY (COD) */}
+          {paymentMethod === 'cod' && (
+            <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
+              <div className={styles.upiDetails}>
+                <h3 style={{ color: 'var(--accent-color)', marginBottom: '1rem', fontSize: '1.25rem' }}>
+                  💵 CASH ON DELIVERY (COD)
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.925rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                  Pay cash directly to the courier delivery executive upon arrival at your doorstep.
                 </p>
 
-                {utrError && (
-                  <div style={{ backgroundColor: 'rgba(255, 85, 85, 0.15)', border: '1px solid #ff5555', color: '#ff7777', padding: '0.75rem 1rem', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.875rem' }}>
-                    {utrError}
-                  </div>
-                )}
-
-                <input
-                  type="text"
-                  required
-                  maxLength={12}
-                  minLength={12}
-                  pattern="\d{12}"
-                  placeholder="Enter 12-digit UTR (e.g. 420819482019)"
-                  value={utr}
-                  onChange={(e) => {
-                    setUtr(e.target.value.replace(/\D/g, ''))
-                    setUtrError(null)
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    borderRadius: '4px',
-                    border: '1px solid var(--accent-color)',
-                    backgroundColor: '#0a0a0a',
-                    color: '#ffffff',
-                    fontSize: '1rem',
-                    letterSpacing: '0.1em',
-                    fontFamily: 'monospace',
-                  }}
-                />
-
-                <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
-                  <button type="button" className="btn-outline" onClick={() => setStep('address')}>
-                    ← Edit Address
-                  </button>
-                  <button type="submit" className="btn-primary" disabled={submitting}>
-                    {submitting ? 'VERIFYING UTR...' : 'SUBMIT UTR & PLACE ORDER ✓'}
-                  </button>
+                <div className={styles.detailRow}>
+                  <span>Subtotal:</span>
+                  <strong>₹{subtotal}</strong>
                 </div>
-              </form>
+                <div className={styles.detailRow}>
+                  <span>Flat Express Shipping:</span>
+                  <strong>₹{shippingFee}</strong>
+                </div>
+                <div className={styles.detailRow}>
+                  <span>Total Amount to Pay on Delivery:</span>
+                  <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
+                </div>
+
+                <hr className={styles.divider} />
+
+                <form onSubmit={handlePaymentConfirm} className={styles.utrForm}>
+                  <div className={styles.formActions} style={{ marginTop: '1.5rem' }}>
+                    <button type="button" className="btn-outline" onClick={() => setStep('address')}>
+                      ← Edit Address
+                    </button>
+                    <button type="submit" className="btn-primary" disabled={submitting}>
+                      {submitting ? 'PLACING COD ORDER...' : 'CONFIRM CASH ON DELIVERY ORDER ✓'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* STEP 4: ORDER CONFIRMED & SELLER VERIFICATION */}
+      {/* STEP 4: ORDER CONFIRMED */}
       {step === 'confirmed' && placedOrder && (
         <div className={styles.confirmedBox}>
           <div className={styles.successIcon}>✓</div>
           <h1 className="font-display" style={{ fontSize: '3rem', color: 'var(--accent-color)' }}>
-            ORDER PLACED!
+            {placedOrder.paymentMethod.includes('COD') ? 'COD ORDER PLACED!' : 'UPI ORDER PLACED!'}
           </h1>
           <p className={styles.orderIdText}>
             Order Reference ID: <strong>#{orderId}</strong>
@@ -439,21 +528,22 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
 
           <div style={{ backgroundColor: 'rgba(196, 255, 61, 0.1)', border: '1px solid var(--accent-color)', borderRadius: '8px', padding: '1.25rem', margin: '1.5rem 0', textAlign: 'left' }}>
             <h3 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
-              ⚠️ Final Step: Verify Payment via WhatsApp
+              {placedOrder.paymentMethod.includes('COD') ? '💵 Cash on Delivery Confirmation' : '⚠️ Final Step: Verify Payment via WhatsApp'}
             </h3>
             <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
-              Your order has been recorded with UTR <strong>{placedOrder.utr}</strong>.
-            </p>
-            <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
-              Click the button below to send your payment screenshot & details to DualTurf WhatsApp support to verify and dispatch your order.
+              {placedOrder.paymentMethod.includes('COD')
+                ? `Please keep ₹${placedOrder.totalAmount} cash ready for delivery. Our team will contact you before dispatch.`
+                : `Your order has been recorded with UTR ${placedOrder.utr}. Please send details to WhatsApp support.`}
             </p>
           </div>
 
           <div className={styles.confirmedDetails}>
-            <h3>Shipping Details:</h3>
+            <h3>Shipping & Order Details:</h3>
             <p><strong>{placedOrder.customer.fullName}</strong> ({placedOrder.customer.phone})</p>
             <p>{placedOrder.customer.address}, {placedOrder.customer.city}, {placedOrder.customer.state} - {placedOrder.customer.pincode}</p>
-            <p style={{ marginTop: '0.75rem' }}>Total Paid: <strong>₹{placedOrder.totalAmount}</strong> (via UPI UTR: {placedOrder.utr})</p>
+            <p style={{ marginTop: '0.75rem' }}>
+              Payment Method: <strong>{placedOrder.paymentMethod}</strong> • Total Amount: <strong>₹{placedOrder.totalAmount}</strong>
+            </p>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column', marginTop: '2rem' }}>
@@ -464,7 +554,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               className="btn-primary"
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.1rem 2rem', fontSize: '1rem' }}
             >
-              📱 SEND PAYMENT PROOF TO WHATSAPP (+91-7656072801) →
+              📱 SEND ORDER DETAILS TO WHATSAPP (+91-7656072801) →
             </a>
 
             <Link href="/collections/all" className="btn-outline" style={{ marginTop: '0.5rem' }}>
