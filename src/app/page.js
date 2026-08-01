@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { HERO_SLIDES, CATEGORIES, LATEST_DROP, INTERNATIONAL_KITS } from '@/data/products'
+import { HERO_SLIDES, CATEGORIES } from '@/data/products'
 import { getAllProducts } from '@/lib/sanity'
 import { useCart } from '@/context/CartContext'
 import ScrollReveal from '@/components/ScrollReveal'
@@ -14,15 +14,18 @@ export default function Home() {
   const [intlIndex, setIntlIndex] = useState(0)
   const [addedMessage, setAddedMessage] = useState(null)
   const [productsList, setProductsList] = useState([])
+  const [loading, setLoading] = useState(true)
   const { addToCart } = useCart()
 
   useEffect(() => {
     getAllProducts().then(data => {
-      if (data && data.length > 0) {
+      if (data) {
         setProductsList(data)
       }
+      setLoading(false)
     }).catch(err => {
       console.error("Sanity fetch error on homepage:", err)
+      setLoading(false)
     })
   }, [])
 
@@ -41,10 +44,8 @@ export default function Home() {
     setTimeout(() => setAddedMessage(null), 3000)
   }
 
-  const latestDropProducts = productsList.length > 0 ? productsList.slice(0, 8) : LATEST_DROP
-  const intlKitsProducts = productsList.filter(p => p.category === 'international-kits').length > 0
-    ? productsList.filter(p => p.category === 'international-kits')
-    : INTERNATIONAL_KITS
+  const latestDropProducts = productsList.slice(0, 8)
+  const intlKitsProducts = productsList.filter(p => p.category === 'international-kits')
 
   return (
     <div className={styles.homeContainer}>
@@ -156,42 +157,53 @@ export default function Home() {
           <ScrollReveal direction="up">
             <h2 className={`font-display title-underline ${styles.sectionTitle}`}>LATEST DROP</h2>
           </ScrollReveal>
-          <div className={styles.productGrid}>
-            {latestDropProducts.map((product, idx) => (
-              <ScrollReveal key={product.id || product._id || idx} direction="scale" delay={idx * 0.12}>
-                <div className={`product-card ${styles.productCard}`}>
-                  <Link href={`/products/${product.slug}`} className={styles.productImgWrapper}>
-                    <div
-                      className={`product-card-img ${styles.cardBg}`}
-                      style={{ backgroundImage: `url(${product.image})` }}
-                    />
-                    <span className={styles.newBadge}>NEW</span>
-                    <button
-                      className={styles.quickAddBtn}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleQuickAdd(product)
-                      }}
-                      title="Quick add"
-                    >
-                      +
-                    </button>
-                  </Link>
-                  <div className={styles.productMeta}>
-                    <Link href={`/products/${product.slug}`}>
-                      <h3 className={styles.productTitle}>{product.title || product.name}</h3>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '4rem 0' }}>
+              Loading products...
+            </div>
+          ) : latestDropProducts.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '4rem 0' }}>
+              No products published yet. Add products in Sanity Studio!
+            </div>
+          ) : (
+            <div className={styles.productGrid}>
+              {latestDropProducts.map((product, idx) => (
+                <ScrollReveal key={product.id || product._id || idx} direction="scale" delay={idx * 0.12}>
+                  <div className={`product-card ${styles.productCard}`}>
+                    <Link href={`/products/${product.slug}`} className={styles.productImgWrapper}>
+                      <div
+                        className={`product-card-img ${styles.cardBg}`}
+                        style={{ backgroundImage: `url(${product.image})` }}
+                      />
+                      <span className={styles.newBadge}>NEW</span>
+                      <button
+                        className={styles.quickAddBtn}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleQuickAdd(product)
+                        }}
+                        title="Quick add"
+                      >
+                        +
+                      </button>
                     </Link>
-                    <div className={styles.priceRow}>
-                      <span className={styles.price}>₹{product.price}</span>
-                      {product.originalPrice && (
-                        <span className={styles.originalPrice}>₹{product.originalPrice}</span>
-                      )}
+                    <div className={styles.productMeta}>
+                      <Link href={`/products/${product.slug}`}>
+                        <h3 className={styles.productTitle}>{product.title || product.name}</h3>
+                      </Link>
+                      <div className={styles.priceRow}>
+                        <span className={styles.price}>₹{product.price}</span>
+                        {product.originalPrice && (
+                          <span className={styles.originalPrice}>₹{product.originalPrice}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
