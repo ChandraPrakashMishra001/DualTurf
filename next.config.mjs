@@ -5,6 +5,20 @@ const nextConfig = {
     // Serve modern formats (WebP/AVIF) automatically — massively reduces image size
     formats: ['image/avif', 'image/webp'],
     qualities: [75, 80],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+    ],
     // Allow local images from /public
     localPatterns: [
       { pathname: '/images/**' }
