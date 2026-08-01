@@ -156,8 +156,12 @@ export default function AdminOrdersPage() {
                     ))}
                   </ul>
                   <div className={styles.totalRow}>
-                    <span>Total Amount Paid:</span>
-                    <strong className={styles.totalVal}>₹{order.subtotal}</strong>
+                    <span>Subtotal: ₹{order.subtotal || order.totalAmount}</span>
+                    {order.shippingFee !== undefined && <span>Shipping Fee: ₹{order.shippingFee}</span>}
+                    <div style={{ marginTop: '0.25rem' }}>
+                      <span>Total Amount Paid: </span>
+                      <strong className={styles.totalVal}>₹{order.totalAmount || order.subtotal}</strong>
+                    </div>
                   </div>
                 </div>
 

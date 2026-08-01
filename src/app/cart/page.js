@@ -8,6 +8,10 @@ import styles from './page.module.css'
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
 
+  // Shipping Fee configuration
+  const shippingFee = cart.length > 0 ? 80 : 0
+  const totalAmount = subtotal + shippingFee
+
   // Checkout step state: 'cart' | 'address' | 'upi' | 'confirmed'
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
@@ -47,6 +51,8 @@ export default function CartPage() {
       customer: formData,
       items: cart,
       subtotal,
+      shippingFee,
+      totalAmount,
       utr: utr || 'Not Provided',
       status: 'Pending Verification',
     }
@@ -72,7 +78,7 @@ export default function CartPage() {
   // UPI URL & QR Code API
   const upiId = 'dualturf@upi'
   const payeeName = 'DualTurf Store'
-  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${subtotal}&cu=INR`
+  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${totalAmount}&cu=INR`
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`
 
   // Format WhatsApp message for Seller (+91 98765 43210 or Seller number)
@@ -92,7 +98,9 @@ ${placedOrder.customer.address}, ${placedOrder.customer.city}, ${placedOrder.cus
 ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
 
 💳 *Payment Summary:*
-• Total Paid: ₹${placedOrder.subtotal}
+• Subtotal: ₹${placedOrder.subtotal}
+• Shipping Fee: ₹${placedOrder.shippingFee || 80}
+• Total Paid: ₹${placedOrder.totalAmount || placedOrder.subtotal + 80}
 • UPI VPA: ${upiId}
 • UTR / Ref ID: ${placedOrder.utr}`
 
@@ -180,12 +188,12 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                   <span>₹{subtotal}</span>
                 </div>
                 <div className={styles.summaryRow}>
-                  <span>Shipping</span>
-                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>FREE</span>
+                  <span>Shipping Fee</span>
+                  <span style={{ color: '#fff', fontWeight: 600 }}>₹{shippingFee}</span>
                 </div>
                 <div className={styles.summaryTotal}>
                   <span>Total Amount</span>
-                  <span style={{ color: 'var(--accent-color)', fontSize: '1.5rem' }}>₹{subtotal}</span>
+                  <span style={{ color: 'var(--accent-color)', fontSize: '1.5rem' }}>₹{totalAmount}</span>
                 </div>
 
                 <button
@@ -328,7 +336,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             <div className={styles.qrSection}>
               <div className={styles.qrCard}>
                 <img src={qrCodeApiUrl} alt="UPI QR Code" className={styles.qrCodeImg} />
-                <span className={styles.amountBadge}>Amount to Pay: ₹{subtotal}</span>
+                <span className={styles.amountBadge}>Amount to Pay: ₹{totalAmount}</span>
               </div>
               <p className={styles.qrHint}>Supports GPay • PhonePe • Paytm • BHIM • CRED</p>
             </div>
@@ -343,8 +351,16 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                 <strong>{payeeName}</strong>
               </div>
               <div className={styles.detailRow}>
+                <span>Subtotal:</span>
+                <strong>₹{subtotal}</strong>
+              </div>
+              <div className={styles.detailRow}>
+                <span>Shipping Fee:</span>
+                <strong>₹{shippingFee}</strong>
+              </div>
+              <div className={styles.detailRow}>
                 <span>Total Amount:</span>
-                <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{subtotal}</strong>
+                <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
               </div>
 
               <hr className={styles.divider} />
@@ -407,6 +423,9 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             <p><strong>Name:</strong> {placedOrder.customer.fullName}</p>
             <p><strong>Phone:</strong> {placedOrder.customer.phone}</p>
             <p><strong>Address:</strong> {placedOrder.customer.address}, {placedOrder.customer.city}, {placedOrder.customer.state} - {placedOrder.customer.pincode}</p>
+            <p><strong>Subtotal:</strong> ₹{placedOrder.subtotal}</p>
+            <p><strong>Shipping Fee:</strong> ₹{placedOrder.shippingFee || 80}</p>
+            <p><strong>Total Paid:</strong> ₹{placedOrder.totalAmount || placedOrder.subtotal + 80}</p>
             <p><strong>Payment UTR:</strong> {placedOrder.utr}</p>
             <p style={{ marginTop: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>
               🚚 Dispatches in 48 Hours via Express Courier
