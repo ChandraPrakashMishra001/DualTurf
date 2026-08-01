@@ -576,11 +576,11 @@
   min-height: 480px;
   background-color: #0a0a0a;
   background-image: linear-gradient(
-      rgba(10, 10, 10, 0.6),
-      rgba(10, 10, 10, 0.75)
+      rgba(10, 10, 10, 0.7),
+      rgba(10, 10, 10, 0.8)
     ),
-    url('/images/ftt.jpg');
-  background-size: contain;
+    url('/images/bb.jpg');
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   padding: 8rem 0;
