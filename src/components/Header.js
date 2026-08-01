@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { products } from '@/data/products'
+import { getAllProducts } from '@/lib/sanity'
 import { useCart } from '@/context/CartContext'
 import { ShiftingDropDown } from '@/components/ui/shifting-dropdown'
 import styles from './Header.module.css'
@@ -14,6 +14,7 @@ export default function Header() {
   if (pathname === '/coming-soon') return null
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [liveProducts, setLiveProducts] = useState([])
 
   const {
     cart,
@@ -25,8 +26,20 @@ export default function Header() {
     setIsCartOpen,
   } = useCart()
 
+  useEffect(() => {
+    getAllProducts().then((data) => {
+      if (data) setLiveProducts(data)
+    }).catch(err => console.error("Header products fetch error:", err))
+  }, [])
+
   const filteredProducts = searchQuery.trim()
-    ? products.filter((p) => (p.title || p.name).toLowerCase().includes(searchQuery.toLowerCase()))
+    ? liveProducts.filter((p) => {
+        const q = searchQuery.toLowerCase().trim()
+        const nameMatch = (p.title || p.name || '').toLowerCase().includes(q)
+        const teamMatch = (p.team || '').toLowerCase().includes(q)
+        const categoryMatch = (p.category || '').toLowerCase().includes(q)
+        return nameMatch || teamMatch || categoryMatch
+      })
     : []
 
   return (
@@ -133,11 +146,11 @@ export default function Header() {
             </div>
             <div className={styles.searchResults}>
               {searchQuery && filteredProducts.length === 0 && (
-                <p className={styles.noResults}>No products found for "{searchQuery}"</p>
+                <p className={styles.noResults}>No jerseys found for "{searchQuery}"</p>
               )}
               {filteredProducts.map((p) => (
                 <Link
-                  key={p.id}
+                  key={p.id || p._id}
                   href={`/products/${p.slug}`}
                   className={styles.searchItem}
                   onClick={() => setSearchOpen(false)}
