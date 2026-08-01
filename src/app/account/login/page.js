@@ -49,7 +49,11 @@ function LoginForm() {
       await loginWithGoogle();
       setSuccessMsg('Signed in with Google!');
     } catch (err) {
-      setError(err.message || 'Google sign-in failed. Please try again.');
+      let msg = err.message || 'Google sign-in failed. Please try again.';
+      if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
+        msg = '⚠️ Google Sign-In requires authorizing dualturf.in in Firebase Console → Authentication → Settings → Authorized domains.';
+      }
+      setError(msg);
     }
   };
 
