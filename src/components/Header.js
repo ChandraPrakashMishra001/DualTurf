@@ -27,18 +27,41 @@ export default function Header() {
   } = useCart()
 
   useEffect(() => {
-    getAllProducts().then((data) => {
-      if (data) setLiveProducts(data)
-    }).catch(err => console.error("Header products fetch error:", err))
+    fetch('/api/search')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.products) setLiveProducts(data.products)
+      })
+      .catch((err) => console.error("Header search API error:", err))
   }, [])
+
+  const ignoreWords = ['jersey', 'jerseys', 'kit', 'kits', 'shirt', 'shirts', 'version', 'home', 'away', 'third', 'fan', 'player', 'stadium', 'the', 'a', 'an', 'for', 'in', 'of']
+  
+  const getSearchTokens = (str) => {
+    return str
+      .toLowerCase()
+      .trim()
+      .replace(/barca/g, 'barcelona')
+      .replace(/man utd|mufc/g, 'manchester united')
+      .replace(/man city|mcfc/g, 'manchester city')
+      .replace(/rmfc/g, 'real madrid')
+      .split(/\s+/)
+      .filter((w) => Boolean(w) && !ignoreWords.includes(w))
+  }
+
+  const rawTokens = searchQuery.toLowerCase().trim().split(/\s+/).filter(Boolean)
+  const searchTokens = getSearchTokens(searchQuery)
+  const tokensToUse = searchTokens.length > 0 ? searchTokens : rawTokens
 
   const filteredProducts = searchQuery.trim()
     ? liveProducts.filter((p) => {
-        const q = searchQuery.toLowerCase().trim()
-        const nameMatch = (p.title || p.name || '').toLowerCase().includes(q)
-        const teamMatch = (p.team || '').toLowerCase().includes(q)
-        const categoryMatch = (p.category || '').toLowerCase().includes(q)
-        return nameMatch || teamMatch || categoryMatch
+        const title = (p.title || p.name || '').toLowerCase()
+        const team = (p.team || '').toLowerCase()
+        const category = (p.category || '').toLowerCase()
+        const fullText = `${title} ${team} ${category}`
+
+        if (tokensToUse.length === 0) return true
+        return tokensToUse.every((token) => fullText.includes(token)) || tokensToUse.some((token) => fullText.includes(token))
       })
     : []
 

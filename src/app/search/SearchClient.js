@@ -15,10 +15,26 @@ const POPULAR_SEARCHES = [
   'Manchester United'
 ];
 
+const IGNORE_WORDS = ['jersey', 'jerseys', 'kit', 'kits', 'shirt', 'shirts', 'version', 'home', 'away', 'third', 'fan', 'player', 'stadium', 'the', 'a', 'an', 'for', 'in', 'of'];
+
 export default function SearchClient({ initialProducts = [] }) {
   const [query, setQuery] = useState('');
 
-  const searchTerms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const getSearchTokens = (str) => {
+    return str
+      .toLowerCase()
+      .trim()
+      .replace(/barca/g, 'barcelona')
+      .replace(/man utd|mufc/g, 'manchester united')
+      .replace(/man city|mcfc/g, 'manchester city')
+      .replace(/rmfc/g, 'real madrid')
+      .split(/\s+/)
+      .filter((w) => Boolean(w) && !IGNORE_WORDS.includes(w));
+  };
+
+  const rawTokens = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const searchTokens = getSearchTokens(query);
+  const tokensToUse = searchTokens.length > 0 ? searchTokens : rawTokens;
 
   const searchResults = query.trim() === '' 
     ? [] 
@@ -31,8 +47,10 @@ export default function SearchClient({ initialProducts = [] }) {
 
         const fullText = `${title} ${team} ${category} ${type} ${description}`;
 
-        // Return true if every word in the search query matches somewhere in fullText
-        return searchTerms.every(term => fullText.includes(term));
+        if (tokensToUse.length === 0) return true;
+        const allMatch = tokensToUse.every(term => fullText.includes(term));
+        if (allMatch) return true;
+        return tokensToUse.some(term => fullText.includes(term));
       });
 
   return (
