@@ -8,16 +8,17 @@ import styles from './page.module.css';
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const { currentUser, userProfile, userOrders, login, loginWithGoogle, logout } = useAuth();
+  const { currentUser, userProfile, userOrders, login, loginWithGoogle, resendVerification, logout } = useAuth();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resentMsg, setResentMsg] = useState(null);
 
   useEffect(() => {
     if (searchParams.get('registered')) {
-      setSuccessMsg('Account created successfully! You are now logged in.');
+      setSuccessMsg('Account created! We have sent a verification link to your email address.');
     }
   }, [searchParams]);
 
@@ -59,7 +60,18 @@ function LoginForm() {
     }
   };
 
+  const handleResend = async () => {
+    setResentMsg(null);
+    try {
+      await resendVerification();
+      setResentMsg('Verification email sent! Please check your inbox or spam folder.');
+    } catch (err) {
+      setResentMsg('Could not resend email. Please try again later.');
+    }
+  };
+
   const displayName = userProfile?.name || currentUser?.displayName || currentUser?.email || 'Customer';
+  const isVerified = userProfile?.emailVerified || currentUser?.emailVerified;
 
   if (currentUser) {
     return (
@@ -79,9 +91,39 @@ function LoginForm() {
             </h3>
             <p style={{ margin: '0.4rem 0' }}><strong>Name:</strong> {displayName}</p>
             <p style={{ margin: '0.4rem 0' }}><strong>Email:</strong> {currentUser.email}</p>
-            <p style={{ margin: '0.4rem 0', fontSize: '0.875rem', color: 'var(--text-dark)' }}>
-              Member Status: <span style={{ color: '#25D366', fontWeight: 600 }}>Active (Firebase Verified)</span>
+            <p style={{ margin: '0.4rem 0', fontSize: '0.875rem' }}>
+              Email Verification Status:{' '}
+              {isVerified ? (
+                <span style={{ color: '#25D366', fontWeight: 600 }}>✓ Verified Real Email</span>
+              ) : (
+                <span style={{ color: '#FFB800', fontWeight: 600 }}>⚠️ Verification Pending</span>
+              )}
             </p>
+
+            {!isVerified && (
+              <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #333' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                  Please verify your email address to ensure seamless order updates and customer support.
+                </p>
+                <button
+                  onClick={handleResend}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: 'var(--accent-color)',
+                    border: '1px solid var(--accent-color)',
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '4px',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ✉️ Resend Verification Email
+                </button>
+                {resentMsg && (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--accent-color)', marginTop: '0.5rem' }}>{resentMsg}</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Order History */}

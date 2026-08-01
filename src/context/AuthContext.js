@@ -7,6 +7,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth'
@@ -48,6 +49,7 @@ export function AuthProvider({ children }) {
                 uid: user.uid,
                 name: user.displayName || user.email,
                 email: user.email,
+                emailVerified: user.emailVerified,
               })
             }
             fetchUserOrders(user.uid)
@@ -86,6 +88,7 @@ export function AuthProvider({ children }) {
       lastName,
       name: fullName,
       email: email.toLowerCase(),
+      emailVerified: false,
       createdAt: new Date().toISOString(),
     }
 
@@ -94,7 +97,13 @@ export function AuthProvider({ children }) {
       const credential = await createUserWithEmailAndPassword(auth, email, password)
       user = credential.user
       await updateProfile(user, { displayName: fullName })
+      try {
+        await sendEmailVerification(user)
+      } catch (e) {
+        console.warn('Email verification send notice:', e.message)
+      }
       profileData.uid = user.uid
+      profileData.emailVerified = user.emailVerified
       try {
         await setDoc(doc(db, 'users', user.uid), profileData)
       } catch (e) {}
@@ -127,6 +136,14 @@ export function AuthProvider({ children }) {
     return profileData
   }
 
+  const resendVerification = async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser)
+      return true
+    }
+    return false
+  }
+
   const login = async (email, password) => {
     let user = null
     try {
@@ -154,6 +171,7 @@ export function AuthProvider({ children }) {
       uid: user.uid || user.id || `user_${Date.now()}`,
       name: user.name || user.displayName || user.email,
       email: user.email,
+      emailVerified: user.emailVerified || false,
       createdAt: user.createdAt || new Date().toISOString(),
     }
 
@@ -175,6 +193,7 @@ export function AuthProvider({ children }) {
       uid: user.uid,
       name: user.displayName || user.email,
       email: user.email,
+      emailVerified: true, // Google accounts are pre-verified by Google
       photoURL: user.photoURL,
       createdAt: new Date().toISOString(),
     }
@@ -214,6 +233,7 @@ export function AuthProvider({ children }) {
         register,
         login,
         loginWithGoogle,
+        resendVerification,
         logout,
         fetchUserOrders: () => currentUser && fetchUserOrders(currentUser.uid),
       }}
