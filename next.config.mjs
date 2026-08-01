@@ -3,6 +3,7 @@ const nextConfig = {
   images: {
     // Serve modern formats (WebP/AVIF) automatically — massively reduces image size
     formats: ['image/avif', 'image/webp'],
+    qualities: [75, 80],
     // Allow local images from /public
     localPatterns: [
       { pathname: '/images/**' }
