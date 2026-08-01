@@ -7,6 +7,8 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
@@ -96,10 +98,9 @@ export function AuthProvider({ children }) {
         await setDoc(doc(db, 'users', user.uid), profileData)
       } catch (e) {}
     } catch (e) {
-      console.warn('Firebase Auth register notice (using local session fallback):', e.message)
+      console.warn('Firebase Auth register notice:', e.message)
     }
 
-    // Save session locally
     try {
       localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
       const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
@@ -118,11 +119,10 @@ export function AuthProvider({ children }) {
       const credential = await signInWithEmailAndPassword(auth, email, password)
       user = credential.user
     } catch (e) {
-      console.warn('Firebase Auth login notice (checking local users fallback):', e.message)
+      console.warn('Firebase Auth login notice:', e.message)
     }
 
     if (!user) {
-      // Fallback local lookup
       try {
         const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
         const found = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
@@ -152,6 +152,32 @@ export function AuthProvider({ children }) {
     return sessionObj
   }
 
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth, provider)
+    const user = result.user
+
+    const profileData = {
+      uid: user.uid,
+      name: user.displayName || user.email,
+      email: user.email,
+      photoURL: user.photoURL,
+      createdAt: new Date().toISOString(),
+    }
+
+    try {
+      await setDoc(doc(db, 'users', user.uid), profileData, { merge: true })
+    } catch (e) {}
+
+    try {
+      localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
+    } catch (e) {}
+
+    setCurrentUser(profileData)
+    setUserProfile(profileData)
+    return profileData
+  }
+
   const logout = async () => {
     try {
       await signOut(auth)
@@ -173,6 +199,7 @@ export function AuthProvider({ children }) {
         loading,
         register,
         login,
+        loginWithGoogle,
         logout,
         fetchUserOrders: () => currentUser && fetchUserOrders(currentUser.uid),
       }}
