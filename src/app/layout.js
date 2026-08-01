@@ -4,6 +4,7 @@ import Footer from '@/components/Footer'
 import MainWrapper from '@/components/MainWrapper'
 import SmoothScroll from '@/components/SmoothScroll'
 import { CartProvider } from '@/context/CartContext'
+import { AuthProvider } from '@/context/AuthContext'
 
 export const metadata = {
   title: 'DualTurf — Premium Football Jerseys & Kits',
@@ -21,11 +22,13 @@ export default function RootLayout({ children }) {
     <html lang="en" data-scroll-behavior="smooth">
       <body>
         <SmoothScroll>
-          <CartProvider>
-            <Header />
-            <MainWrapper>{children}</MainWrapper>
-            <Footer />
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <Header />
+              <MainWrapper>{children}</MainWrapper>
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
         </SmoothScroll>
       </body>
     </html>
