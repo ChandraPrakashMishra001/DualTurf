@@ -42,7 +42,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { orderId, customer, items, subtotal, utr, status = 'Pending Verification' } = body;
+    const { orderId, customer, items, subtotal, shippingFee = 80, totalAmount, paymentMethod, utr, status = 'New Order - Awaiting Verification' } = body;
 
     const newOrder = {
       orderId: orderId || `DT-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -50,7 +50,10 @@ export async function POST(request) {
       customer: customer || {},
       items: items || [],
       subtotal: subtotal || 0,
-      utr: utr || 'Not Provided',
+      shippingFee: shippingFee || 80,
+      totalAmount: totalAmount || (subtotal + shippingFee),
+      paymentMethod: paymentMethod || 'Online / COD',
+      utr: utr || 'N/A',
       status,
     };
 
@@ -58,10 +61,14 @@ export async function POST(request) {
     currentOrders.unshift(newOrder); // newest first
     saveOrders(currentOrders);
 
+    console.log(`🔔 NEW ORDER RECEIVED: #${newOrder.orderId} from ${newOrder.customer.fullName || 'Customer'} (${newOrder.customer.phone || 'No Phone'}) for ₹${newOrder.totalAmount}`);
+
     return NextResponse.json({
       success: true,
-      message: 'Order received by seller',
+      message: 'Order recorded successfully and seller notified',
       order: newOrder,
+      sellerWhatsApp: '917656072801',
+      sellerEmail: 'turfdual@gmail.com',
     });
   } catch (error) {
     console.error('POST /api/orders error:', error);

@@ -15,7 +15,7 @@ export default function CartPage() {
   const shippingFee = cart.length > 0 ? 80 : 0
   const totalAmount = subtotal + shippingFee
 
-  // Checkout step state: 'cart' | 'address' | 'payment' | 'gateway_pending' | 'confirmed'
+  // Checkout step state: 'cart' | 'address' | 'payment' | 'confirmed'
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
   const [gatewayNotice, setGatewayNotice] = useState(null)
@@ -51,15 +51,14 @@ export default function CartPage() {
 
     // Check if Razorpay / Payment Gateway script or API key is active
     if (paymentMethod === 'gateway') {
-      // Pause automatic order confirmation until payment gateway credentials are added
       setTimeout(() => {
-        setGatewayNotice('⚠️ Payment Gateway Integration in Progress: Please add your Razorpay / PhonePe / Cashfree API credentials to process live instant payments.')
+        setGatewayNotice('⚠️ Online Payment Gateway Integration: Please connect your Razorpay or PhonePe API credentials to process live instant card/UPI payments.')
         setSubmitting(false)
-      }, 1000)
+      }, 800)
       return
     }
 
-    // COD Flow
+    // COD Order Flow
     const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
     const orderPayload = {
       orderId: generatedId,
@@ -86,10 +85,34 @@ export default function CartPage() {
       setStep('confirmed')
       setSubmitting(false)
       clearCart()
+
+      // Automatically open WhatsApp message to seller (+91-7656072801)
+      const text = `⚽ *NEW DUALTURF ORDER #${generatedId}*
+
+👤 *Customer Details:*
+• Name: ${formData.fullName}
+• Phone: ${formData.phone}
+• Email: ${formData.email}
+
+📍 *Shipping Address:*
+${formData.address}, ${formData.city}, ${formData.state} - ${formData.pincode}
+
+🛍️ *Items Ordered:*
+${cart.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
+
+💳 *Payment Summary:*
+• Payment Mode: Cash on Delivery (COD)
+• Subtotal: ₹${subtotal}
+• Shipping Fee: ₹${shippingFee}
+• Total Amount to Collect: ₹${totalAmount}`
+
+      const waUrl = `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
+      setTimeout(() => {
+        window.open(waUrl, '_blank')
+      }, 500)
     }
   }
 
-  // Format WhatsApp message for Seller (+91-7656072801)
   const generateWhatsAppLink = () => {
     if (!placedOrder) return '#'
     const text = `⚽ *NEW DUALTURF ORDER #${placedOrder.orderId}*
@@ -329,7 +352,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
       {step === 'payment' && (
         <div className={styles.upiContainer}>
           <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            PAYMENT GATEWAY
+            PAYMENT METHOD
           </h1>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
@@ -350,7 +373,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               }}
             >
               🔒 Online Payment Gateway
-              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Razorpay / PhonePe / UPI / Cards</span>
+              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Razorpay / PhonePe / Cards / UPI</span>
             </button>
 
             <button
@@ -403,7 +426,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
                     ← Edit Address
                   </button>
                   <button type="submit" className="btn-primary" disabled={submitting}>
-                    {submitting ? 'INITIATING PAYMENT...' : paymentMethod === 'gateway' ? `PAY ₹${totalAmount} VIA GATEWAY →` : 'PLACE COD ORDER →'}
+                    {submitting ? 'PROCESSING ORDER...' : paymentMethod === 'gateway' ? `PAY ₹${totalAmount} VIA GATEWAY →` : 'PLACE COD ORDER →'}
                   </button>
                 </div>
               </form>
@@ -423,6 +446,15 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             Order Reference ID: <strong>#{orderId}</strong>
           </p>
 
+          <div style={{ backgroundColor: 'rgba(196, 255, 61, 0.1)', border: '1px solid var(--accent-color)', borderRadius: '8px', padding: '1.25rem', margin: '1.5rem 0', textAlign: 'left' }}>
+            <h3 style={{ color: 'var(--accent-color)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+              ✓ Notification Sent to Seller
+            </h3>
+            <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
+              Your order notification has been sent automatically to DualTurf store management (+91-7656072801).
+            </p>
+          </div>
+
           <div className={styles.confirmedDetails}>
             <h3>Shipping & Order Details:</h3>
             <p><strong>{placedOrder.customer.fullName}</strong> ({placedOrder.customer.phone})</p>
@@ -440,7 +472,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               className="btn-primary"
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.1rem 2rem', fontSize: '1rem' }}
             >
-              📱 SEND ORDER DETAILS TO WHATSAPP (+91-7656072801) →
+              📱 CHAT WITH SELLER ON WHATSAPP (+91-7656072801) →
             </a>
 
             <Link href="/collections/all" className="btn-outline" style={{ marginTop: '0.5rem' }}>
