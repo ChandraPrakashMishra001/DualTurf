@@ -1,67 +1,26 @@
-'use client'
-
-import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { HERO_SLIDES, CATEGORIES } from '@/data/products'
 import { getAllProducts } from '@/lib/sanity'
-import { useCart } from '@/context/CartContext'
 import ScrollReveal from '@/components/ScrollReveal'
 import GlowCard from '@/components/GlowCard'
+import QuickAddButton from '@/components/QuickAddButton'
 import styles from './page.module.css'
 
-export default function Home() {
-  const [heroIndex, setHeroIndex] = useState(0)
-  const [intlIndex, setIntlIndex] = useState(0)
-  const [addedMessage, setAddedMessage] = useState(null)
-  const [productsList, setProductsList] = useState([])
-  const [loading, setLoading] = useState(true)
-  const { addToCart } = useCart()
+export const revalidate = 0
 
-  useEffect(() => {
-    getAllProducts().then(data => {
-      if (data) {
-        setProductsList(data)
-      }
-      setLoading(false)
-    }).catch(err => {
-      console.error("Sanity fetch error on homepage:", err)
-      setLoading(false)
-    })
-  }, [])
-
-  // Auto slide hero banner if multiple slides exist
-  useEffect(() => {
-    if (HERO_SLIDES.length <= 1) return
-    const timer = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % HERO_SLIDES.length)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const handleQuickAdd = (product) => {
-    addToCart(product, 'M', 1)
-    setAddedMessage(`Added ${product.title || product.name} to bag!`)
-    setTimeout(() => setAddedMessage(null), 3000)
-  }
-
-  const latestDropProducts = productsList.slice(0, 8)
-  const intlKitsProducts = productsList.filter(p => p.category === 'international-kits')
+export default async function Home() {
+  const productsList = await getAllProducts()
+  const latestDropProducts = productsList || []
+  const intlKitsProducts = (productsList || []).filter(p => p.category === 'international-kits')
 
   return (
     <div className={styles.homeContainer}>
-      {/* Toast Notification */}
-      {addedMessage && (
-        <div className={styles.toast}>
-          <span>✓ {addedMessage}</span>
-        </div>
-      )}
-
       {/* Hero Section Banner */}
       <section className={styles.heroSection}>
-        {HERO_SLIDES.map((slide, idx) => (
+        {HERO_SLIDES.map((slide) => (
           <div
             key={slide.id}
-            className={`${styles.heroSlide} ${idx === heroIndex ? styles.activeSlide : ''}`}
+            className={`${styles.heroSlide} ${styles.activeSlide}`}
           >
             <div
               className={styles.heroBg}
@@ -83,19 +42,6 @@ export default function Home() {
             </div>
           </div>
         ))}
-
-        {/* Slider Controls (if multiple) */}
-        {HERO_SLIDES.length > 1 && (
-          <div className={styles.heroIndicators}>
-            {HERO_SLIDES.map((_, i) => (
-              <button
-                key={i}
-                className={`${styles.indicator} ${i === heroIndex ? styles.activeIndicator : ''}`}
-                onClick={() => setHeroIndex(i)}
-              />
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Marquee Bar */}
@@ -158,56 +104,37 @@ export default function Home() {
             <h2 className={`font-display title-underline ${styles.sectionTitle}`}>LATEST DROP</h2>
           </ScrollReveal>
 
-          {loading ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '4rem 0' }}>
-              Loading products...
-            </div>
-          ) : latestDropProducts.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '4rem 0' }}>
-              No products published yet. Add products in Sanity Studio!
-            </div>
-          ) : (
-            <div className={styles.productGrid}>
-              {latestDropProducts.map((product, idx) => (
-                <ScrollReveal key={product.id || product._id || idx} direction="scale" delay={idx * 0.12}>
-                  <div className={`product-card ${styles.productCard}`}>
-                    <Link href={`/products/${product.slug}`} className={styles.productImgWrapper}>
-                      <div
-                        className={`product-card-img ${styles.cardBg}`}
-                        style={{ backgroundImage: `url(${product.image})` }}
-                      />
-                      <span className={styles.newBadge}>NEW</span>
-                      <button
-                        className={styles.quickAddBtn}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleQuickAdd(product)
-                        }}
-                        title="Quick add"
-                      >
-                        +
-                      </button>
+          <div className={styles.productGrid}>
+            {latestDropProducts.map((product, idx) => (
+              <ScrollReveal key={product.id || product._id || idx} direction="scale" delay={idx * 0.12}>
+                <div className={`product-card ${styles.productCard}`}>
+                  <Link href={`/products/${product.slug}`} className={styles.productImgWrapper}>
+                    <div
+                      className={`product-card-img ${styles.cardBg}`}
+                      style={{ backgroundImage: `url(${product.image})` }}
+                    />
+                    <span className={styles.newBadge}>NEW</span>
+                    <QuickAddButton product={product} />
+                  </Link>
+                  <div className={styles.productMeta}>
+                    <Link href={`/products/${product.slug}`}>
+                      <h3 className={styles.productTitle}>{product.title || product.name}</h3>
                     </Link>
-                    <div className={styles.productMeta}>
-                      <Link href={`/products/${product.slug}`}>
-                        <h3 className={styles.productTitle}>{product.title || product.name}</h3>
-                      </Link>
-                      <div className={styles.priceRow}>
-                        <span className={styles.price}>₹{product.price}</span>
-                        {product.originalPrice && (
-                          <span className={styles.originalPrice}>₹{product.originalPrice}</span>
-                        )}
-                      </div>
+                    <div className={styles.priceRow}>
+                      <span className={styles.price}>₹{product.price}</span>
+                      {product.originalPrice && (
+                        <span className={styles.originalPrice}>₹{product.originalPrice}</span>
+                      )}
                     </div>
                   </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          )}
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Best of International Home Kits Slider */}
+      {/* Best of International Home Kits Section */}
       {intlKitsProducts.length > 0 && (
         <section className={styles.section}>
           <div className="container">
@@ -216,47 +143,29 @@ export default function Home() {
                 BEST OF INTERNATIONAL HOME KITS
               </h2>
             </ScrollReveal>
-            <ScrollReveal direction="up" delay={0.2}>
-              <div className={styles.intlSlider}>
-                {intlKitsProducts.map((kit, idx) => (
-                  <div
-                    key={kit.id || kit._id || idx}
-                    className={`${styles.intlSlide} ${idx === intlIndex ? styles.activeIntlSlide : ''}`}
-                  >
-                    <div
-                      className={styles.intlBg}
-                      style={{ backgroundImage: `url(${kit.image})` }}
-                    />
-                    <div className={styles.intlOverlay} />
-                    <div className={styles.intlContent}>
-                      <h3 className="font-display">{kit.title || kit.name}</h3>
-                      <p className={styles.intlPrice}>₹{kit.price}</p>
-                      <button onClick={() => handleQuickAdd(kit)} className="btn-outline">
-                        ADD TO BAG
-                      </button>
+            <div className={styles.productGrid}>
+              {intlKitsProducts.map((kit, idx) => (
+                <ScrollReveal key={kit.id || kit._id || idx} direction="scale" delay={idx * 0.12}>
+                  <div className={`product-card ${styles.productCard}`}>
+                    <Link href={`/products/${kit.slug}`} className={styles.productImgWrapper}>
+                      <div
+                        className={`product-card-img ${styles.cardBg}`}
+                        style={{ backgroundImage: `url(${kit.image})` }}
+                      />
+                      <QuickAddButton product={kit} />
+                    </Link>
+                    <div className={styles.productMeta}>
+                      <Link href={`/products/${kit.slug}`}>
+                        <h3 className={styles.productTitle}>{kit.title || kit.name}</h3>
+                      </Link>
+                      <div className={styles.priceRow}>
+                        <span className={styles.price}>₹{kit.price}</span>
+                      </div>
                     </div>
                   </div>
-                ))}
-                {intlKitsProducts.length > 1 && (
-                  <div className={styles.sliderArrows}>
-                    <button
-                      onClick={() =>
-                        setIntlIndex((prev) => (prev - 1 + intlKitsProducts.length) % intlKitsProducts.length)
-                      }
-                    >
-                      ‹
-                    </button>
-                    <button
-                      onClick={() =>
-                        setIntlIndex((prev) => (prev + 1) % intlKitsProducts.length)
-                      }
-                    >
-                      ›
-                    </button>
-                  </div>
-                )}
-              </div>
-            </ScrollReveal>
+                </ScrollReveal>
+              ))}
+            </div>
           </div>
         </section>
       )}
