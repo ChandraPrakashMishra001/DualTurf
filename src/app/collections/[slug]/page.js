@@ -3,6 +3,8 @@ import { getProductsByCategory, getAllProducts } from '@/lib/sanity';
 import { CATEGORIES } from '@/data/products';
 import styles from './page.module.css';
 
+export const revalidate = 0;
+
 export default async function CollectionPage({ params }) {
   const resolvedParams = await params;
   const slug = resolvedParams?.slug || 'all';

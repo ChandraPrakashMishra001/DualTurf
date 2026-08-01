@@ -5,8 +5,8 @@ export const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'a1ui8xji',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2024-01-01',
-  useCdn: false,
-  // No token needed — storefront only reads published products (public access)
+  useCdn: false, // Ensure live updates without CDN caching delays
+  perspective: 'published',
 })
 
 // Image URL builder
@@ -14,6 +14,8 @@ const builder = createImageUrlBuilder(client)
 export function urlFor(source) {
   return builder.image(source)
 }
+
+const fetchOptions = { cache: 'no-store' }
 
 // ─── Product Queries ───────────────────────────────────────
 
@@ -38,7 +40,7 @@ export async function getAllProducts() {
       "image": images[0].asset->url,
       "images": images[].asset->url,
     }
-  `)
+  `, {}, fetchOptions)
 }
 
 // Fetch a single product by slug
@@ -62,7 +64,7 @@ export async function getProductBySlug(slug) {
       "image": images[0].asset->url,
       "images": images[].asset->url,
     }
-  `, { slug })
+  `, { slug }, fetchOptions)
 }
 
 // Fetch products by category
@@ -85,7 +87,7 @@ export async function getProductsByCategory(category) {
       sizes,
       "image": images[0].asset->url,
     }
-  `, { category })
+  `, { category }, fetchOptions)
 }
 
 // Fetch featured products (for homepage Latest Drop section)
@@ -103,7 +105,7 @@ export async function getFeaturedProducts() {
       originalPrice,
       "image": images[0].asset->url,
     }
-  `)
+  `, {}, fetchOptions)
 }
 
 // Search products by name or team
@@ -121,5 +123,5 @@ export async function searchProducts(query) {
       originalPrice,
       "image": images[0].asset->url,
     }
-  `, { query: `*${query}*` })
+  `, { query: `*${query}*` }, fetchOptions)
 }
