@@ -24,7 +24,8 @@ export default function NewsLetter() {
   }, [currentSlide])
 
   useEffect(() => {
-    const targetDate = new Date("2026-08-10T00:00:00").getTime()
+    // Extended target date to 15th August 2026
+    const targetDate = new Date("2026-08-15T00:00:00").getTime()
     const interval = setInterval(() => {
       const now = new Date().getTime()
       const distance = targetDate - now
@@ -71,9 +72,10 @@ export default function NewsLetter() {
         <div className={styles.overlay} />
       </div>
 
-      {/* Main Content — Coming Soon + Countdown Timer */}
+      {/* Main Content — Coming Soon + Countdown Timer + Message */}
       <div className={styles.bottomLeft}>
         <h1 className={styles.heading}>Coming Soon</h1>
+        <p className={styles.launchDate}>Sorry! Great things take time. Launching 15th August!</p>
 
         {/* Countdown */}
         <div className={styles.timerRow}>
