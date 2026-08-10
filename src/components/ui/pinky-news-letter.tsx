@@ -72,6 +72,14 @@ export default function NewsLetter() {
         <div className={styles.overlay} />
       </div>
 
+      {/* Top Bar — Dual Turf Brand */}
+      <div className={styles.topBar}>
+        <span className={styles.brand}>
+          <span className={styles.white}>D</span><span className={styles.green}>ual</span>{' '}
+          <span className={styles.white}>T</span><span className={styles.green}>urf</span>
+        </span>
+      </div>
+
       {/* Main Content — Coming Soon + Countdown Timer + Message */}
       <div className={styles.bottomLeft}>
         <h1 className={styles.heading}>Coming Soon</h1>
