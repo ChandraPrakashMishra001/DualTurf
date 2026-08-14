@@ -289,7 +289,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              ⚡ Auto-filled from your saved Flipkart-style account profile!
+              ⚡ Auto-filled from your saved account address!
             </div>
           )}
 

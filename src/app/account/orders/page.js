@@ -152,11 +152,11 @@ export default function MyOrdersPage() {
         <button onClick={() => { logout(); router.push('/') }} className={styles.logoutBtn}>Logout</button>
       </div>
 
-      {/* Saved Address Section (Flipkart style) */}
+      {/* Saved Address Section */}
       <div className={styles.addressCard}>
         <div className={styles.addressHeader}>
           <h3>📍 Saved Shipping Address (Auto-Fills at Checkout)</h3>
-          <span className={styles.flipkartBadge}>⚡ Flipkart Style Instant Checkout</span>
+          <span className={styles.expressBadge}>⚡ Fast Express Checkout</span>
         </div>
 
         {addressNotice && <p className={styles.addressNotice}>{addressNotice}</p>}
