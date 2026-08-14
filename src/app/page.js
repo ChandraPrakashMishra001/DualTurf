@@ -9,7 +9,7 @@ export const revalidate = 0
 
 export default async function Home() {
   const productsList = await getAllProducts()
-  const excludedNames = ['liverpool home', 'real madrid home', 'manchester united home']
+  const excludedNames = ['liverpool home', 'manchester united home']
   const latestDropProducts = (productsList || []).filter(product => {
     const nameStr = (product.title || product.name || '').toLowerCase()
     return !excludedNames.some(ex => nameStr.includes(ex))
