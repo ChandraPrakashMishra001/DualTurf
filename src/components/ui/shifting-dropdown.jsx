@@ -243,120 +243,31 @@ const ClubKits = () => {
   );
 };
 
-/* Categories Content 2: Retro & Full Sets */
+/* Categories Content 2: Retro Jerseys */
 const RetroSets = () => {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
       <Link
         href="/collections/retro-jerseys"
         style={{
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
+          gap: '1rem',
+          padding: '1.25rem',
           backgroundColor: '#141414',
-          borderRadius: '8px',
+          borderRadius: '10px',
           border: '1px solid rgba(255,255,255,0.08)',
-          textAlign: 'center',
+          transition: 'all 0.2s ease',
         }}
       >
-        <Flame className="mb-2 h-5 w-5" style={{ color: '#c4ff3d', marginBottom: '0.5rem' }} />
-        <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>Retro Classics</span>
-        <span style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>2006-07 Milan & Golden Era</span>
-      </Link>
-
-      <Link
-        href="/collections/jerseys-with-shorts"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem',
-          backgroundColor: '#141414',
-          borderRadius: '8px',
-          border: '1px solid rgba(255,255,255,0.08)',
-          textAlign: 'center',
-        }}
-      >
-        <Tag className="mb-2 h-5 w-5" style={{ color: '#c4ff3d', marginBottom: '0.5rem' }} />
-        <span style={{ fontSize: '0.875rem', fontWeight: 700 }}>Full Sets</span>
-        <span style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>Jerseys + Shorts Combos</span>
-      </Link>
-    </div>
-  );
-};
-
-/* Categories Content 3: International & Clearance */
-const InternationalClearance = () => {
-  return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-        <Link
-          href="/collections/international-kits"
-          style={{
-            borderRadius: '8px',
-            overflow: 'hidden',
-            backgroundColor: '#141414',
-            border: '1px solid rgba(255,255,255,0.08)',
-            padding: '0.75rem',
-            display: 'block',
-          }}
-        >
-          <img
-            style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '6px', marginBottom: '0.5rem' }}
-            src="https://images.unsplash.com/photo-1552066379-e7bfd22155c5?w=400&h=200&fit=crop"
-            alt="International Home Kits"
-          />
-          <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ffffff' }}>
-            International Home Kits
-          </h4>
-          <p style={{ fontSize: '0.75rem', color: '#999' }}>
-            Argentina, Brazil, Germany & Portugal 2026 Kits
-          </p>
-        </Link>
-
-        <Link
-          href="/collections/clearance-sale"
-          style={{
-            borderRadius: '8px',
-            overflow: 'hidden',
-            backgroundColor: '#141414',
-            border: '1px solid rgba(255,255,255,0.08)',
-            padding: '0.75rem',
-            display: 'block',
-          }}
-        >
-          <img
-            style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '6px', marginBottom: '0.5rem' }}
-            src="https://images.pexels.com/photos/28555936/pexels-photo-28555936.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-            alt="Clearance Sale"
-          />
-          <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: '#c4ff3d' }}>
-            Clearance Sale - Up to 70% Off
-          </h4>
-          <p style={{ fontSize: '0.75rem', color: '#999' }}>
-            Limited stock season stock clearance deals
-          </p>
-        </Link>
-      </div>
-
-      <Link
-        href="/collections/all"
-        style={{
-          marginLeft: 'auto',
-          marginTop: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.375rem',
-          fontSize: '0.8125rem',
-          fontWeight: 700,
-          color: '#c4ff3d',
-        }}
-      >
-        <span>View Clearance & Accessories</span>
-        <ArrowRight size={14} />
+        <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'rgba(196, 255, 61, 0.1)' }}>
+          <Flame size={22} style={{ color: '#c4ff3d' }} />
+        </div>
+        <div style={{ textAlign: 'left' }}>
+          <span style={{ display: 'block', fontSize: '1rem', fontWeight: 700, color: '#ffffff' }}>Retro Classics Collection</span>
+          <span style={{ fontSize: '0.8125rem', color: '#888', marginTop: '0.25rem', display: 'block' }}>Explore iconic 2006-07 Milan & Golden Era vintage kits</span>
+        </div>
+        <ArrowRight size={18} style={{ marginLeft: 'auto', color: '#c4ff3d' }} />
       </Link>
     </div>
   );
@@ -368,7 +279,7 @@ const TABS = [
     Component: ClubKits,
   },
   {
-    title: "Retro & Full Sets",
+    title: "Retro Jerseys",
     Component: RetroSets,
   },
 ].map((n, idx) => ({ ...n, id: idx + 1 }));

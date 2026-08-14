@@ -78,7 +78,6 @@ export default async function CollectionPage({ params }) {
             <h3 className={styles.filterTitle}>Type</h3>
             <ul className={styles.filterList}>
               <li><label><input type="checkbox" /> Stadium/Fan Version</label></li>
-              <li><label><input type="checkbox" /> Full Kit</label></li>
             </ul>
           </div>
 
