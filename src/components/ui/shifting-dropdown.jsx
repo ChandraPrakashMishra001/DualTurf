@@ -197,7 +197,7 @@ const Nub = ({ selected }) => {
 const ClubKits = () => {
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2rem' }}>
         <div>
           <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#c4ff3d', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <Zap size={14} /> Season 26-27
@@ -215,31 +215,10 @@ const ClubKits = () => {
 
         <div>
           <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#c4ff3d', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-            <Shield size={14} /> Player Version
-          </h3>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
-            Dri-FIT ADV Kits
-          </Link>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
-            Slim Fit Matchwear
-          </Link>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc' }}>
-            High-Density Badges
-          </Link>
-        </div>
-
-        <div>
-          <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#c4ff3d', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <Sparkles size={14} /> Special Edition
           </h3>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
-            Juventus Fourth Kit
-          </Link>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
-            Concept Collections
-          </Link>
-          <Link href="/collections/2026-27-season-kits" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc' }}>
-            Third Kits 2026
+          <Link href="/products/portugal-pantera-negra-special-edition-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Portugal Pantera Negra Special Edition
           </Link>
         </div>
       </div>
