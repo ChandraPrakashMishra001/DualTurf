@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(localCurrent)
         setCurrentUser(parsed)
         setUserProfile(parsed)
+        setLoading(false) // Immediately unblock UI if local session exists
       }
     } catch (e) {
       console.warn('LocalStorage session read error:', e)

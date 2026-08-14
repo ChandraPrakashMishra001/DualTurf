@@ -117,15 +117,30 @@ export default function MyOrdersPage() {
     }
   }
 
-  if (authLoading) {
+  // Fallback timeout to prevent infinite loading screen
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadingTimeout(true), 2000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (authLoading && !currentUser && !loadingTimeout) {
     return (
       <div className="container" style={{ paddingTop: '140px', paddingBottom: '100px', textAlign: 'center', color: '#888' }}>
-        <p>Verifying your account session...</p>
+        <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Verifying your account session...</p>
       </div>
     )
   }
 
-  if (!currentUser) return null
+  if (!currentUser) {
+    return (
+      <div className="container" style={{ paddingTop: '140px', paddingBottom: '100px', textAlign: 'center', color: '#888' }}>
+        <p style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#fff' }}>Please log in to access your account dashboard.</p>
+        <Link href="/account/login" className="btn-primary">GO TO LOGIN →</Link>
+      </div>
+    )
+  }
 
   return (
     <div className="container" style={{ paddingTop: '100px', paddingBottom: '100px', minHeight: '100vh' }}>
