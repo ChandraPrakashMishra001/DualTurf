@@ -89,26 +89,110 @@
   }
 }
 
-.cartItems {
+.itemList {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.tableHeader {
-  display: grid;
-  grid-template-columns: 2.5fr 1fr 1fr 1fr;
-  padding: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-color);
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  position: relative;
 }
 
 @media (max-width: 640px) {
-  .tableHeader {
-    display: none;
+  .itemRow {
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
+.itemImg {
+  width: 75px;
+  height: 90px;
+  max-width: 75px;
+  max-height: 90px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  background-color: #171717;
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.itemTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.itemSize {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.itemPrice {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.qtyControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  background-color: #111111;
+}
+
+.qtyControl button {
+  width: 28px;
+  height: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qtyControl button:hover {
+  color: var(--accent-color);
+}
+
+.qtyControl span {
+  font-weight: 600;
+  font-size: 0.875rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.lineTotal {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+  min-width: 80px;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .lineTotal {
+    margin-left: auto;
   }
 }
 

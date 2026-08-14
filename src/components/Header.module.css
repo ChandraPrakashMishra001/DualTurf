@@ -275,8 +275,11 @@
 .cartItemImg {
   width: 70px;
   height: 85px;
+  max-width: 70px;
+  max-height: 85px;
   object-fit: cover;
   border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .cartItemDetails {
