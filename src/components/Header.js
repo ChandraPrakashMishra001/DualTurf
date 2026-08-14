@@ -152,6 +152,11 @@ export default function Header() {
             <Link href="/" onClick={() => setMobileOpen(false)}>Home</Link>
             <Link href="/collections/all" onClick={() => setMobileOpen(false)}>Categories</Link>
             <Link href="/contact" onClick={() => setMobileOpen(false)}>Contact Us</Link>
+            {currentUser ? (
+              <Link href="/account/orders" onClick={() => setMobileOpen(false)}>My Account & Orders</Link>
+            ) : (
+              <Link href="/account/login" onClick={() => setMobileOpen(false)}>Login / Account</Link>
+            )}
           </nav>
         </div>
       )}
