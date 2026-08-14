@@ -56,6 +56,34 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Video Section */}
+      <section className={styles.videoSection}>
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className={styles.videoBackground}
+        >
+          <source src="/football.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div className={styles.videoOverlay} />
+        <div className={styles.videoContent}>
+          <ScrollReveal direction="up" delay={0.1}>
+            <h2 className={`font-display text-stroke ${styles.videoTitle}`}>FEEL THE GAME</h2>
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={0.3}>
+            <p className={styles.videoSubtitle}>Experience football like never before</p>
+          </ScrollReveal>
+          <ScrollReveal direction="scale" delay={0.5}>
+            <Link href="/collections/all" className="btn-primary">
+              EXPLORE GEAR →
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Latest Drop */}
       <section className={`${styles.section} ${styles.darkBg}`}>
         <div className="container">
