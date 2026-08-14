@@ -137,13 +137,13 @@ export default async function Home() {
             <div className={styles.statsRow}>
               <ScrollReveal direction="scale" delay={0.3}>
                 <div className={styles.statItem}>
-                  <span className={styles.statNumber}>200+</span>
+                  <span className={styles.statNumber}>10+</span>
                   <span className={styles.statLabel}>DESIGNS</span>
                 </div>
               </ScrollReveal>
               <ScrollReveal direction="scale" delay={0.45}>
                 <div className={styles.statItem}>
-                  <span className={styles.statNumber}>60,000+</span>
+                  <span className={styles.statNumber}>1000+</span>
                   <span className={styles.statLabel}>HAPPY CUSTOMERS</span>
                 </div>
               </ScrollReveal>
