@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { getAllProducts } from '@/lib/sanity'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
 import { ShiftingDropDown } from '@/components/ui/shifting-dropdown'
 import styles from './Header.module.css'
 
@@ -25,6 +26,8 @@ export default function Header() {
     isCartOpen,
     setIsCartOpen,
   } = useCart()
+
+  const { currentUser } = useAuth()
 
   useEffect(() => {
     fetch('/api/search')
@@ -112,7 +115,7 @@ export default function Header() {
               </svg>
             </button>
 
-            <Link href="/account/login" className={styles.iconBtn} title="Account" aria-label="Account">
+            <Link href={currentUser ? "/account/orders" : "/account/login"} className={styles.iconBtn} title="Account" aria-label="Account">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>

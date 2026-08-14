@@ -147,10 +147,53 @@ async function sendOrderEmail(order) {
   }
 }
 
-// GET /api/orders -> Return all orders for the seller dashboard
-export async function GET() {
-  const orders = getOrders();
-  return NextResponse.json({ success: true, orders });
+// Send cancellation or return request email to seller
+async function sendActionEmail(order, actionStr) {
+  const smtpEmail = process.env.SMTP_EMAIL;
+  const smtpPassword = process.env.SMTP_PASSWORD;
+
+  if (!smtpEmail || !smtpPassword || smtpPassword === 'YOUR_GMAIL_APP_PASSWORD_HERE') {
+    return false;
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: smtpEmail, pass: smtpPassword },
+  });
+
+  const mailOptions = {
+    from: `"DualTurf Action" <${smtpEmail}>`,
+    to: smtpEmail,
+    subject: `🚨 ${actionStr.toUpperCase()} - Order #${order.orderId}`,
+    html: `
+      <h2>${actionStr} Requested</h2>
+      <p>Customer: ${order.customer?.fullName} (${order.customer?.email})</p>
+      <p>Order ID: ${order.orderId}</p>
+      <p>Please log in to your dashboard to handle this request.</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Action email error:', error);
+    return false;
+  }
+}
+
+// GET /api/orders -> Return orders (filtered by email if provided, else all)
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const email = searchParams.get('email');
+  const allOrders = getOrders();
+  
+  if (email) {
+    const userOrders = allOrders.filter(o => o.customer?.email === email);
+    return NextResponse.json({ success: true, orders: userOrders });
+  }
+  
+  return NextResponse.json({ success: true, orders: allOrders });
 }
 
 // POST /api/orders -> Receive new order from customer checkout
@@ -173,29 +216,19 @@ export async function POST(request) {
     };
 
     const currentOrders = getOrders();
-    currentOrders.unshift(newOrder); // newest first
+    currentOrders.unshift(newOrder);
     saveOrders(currentOrders);
 
-    console.log(`🔔 NEW ORDER RECEIVED: #${newOrder.orderId} from ${newOrder.customer.fullName || 'Customer'} (${newOrder.customer.phone || 'No Phone'}) for ₹${newOrder.totalAmount}`);
+    console.log(`🔔 NEW ORDER RECEIVED: #${newOrder.orderId}`);
+    sendOrderEmail(newOrder).catch(err => console.error(err));
 
-    // Send email notification to seller (non-blocking)
-    sendOrderEmail(newOrder).catch(err => console.error('Email send error:', err));
-
-    return NextResponse.json({
-      success: true,
-      message: 'Order recorded successfully and seller notified via email',
-      order: newOrder,
-    });
+    return NextResponse.json({ success: true, order: newOrder });
   } catch (error) {
-    console.error('POST /api/orders error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to record order' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Failed to record order' }, { status: 500 });
   }
 }
 
-// PATCH /api/orders -> Update order status (e.g. Verified, Shipped, Delivered)
+// PATCH /api/orders -> Update order status
 export async function PATCH(request) {
   try {
     const { orderId, status } = await request.json();
@@ -208,9 +241,14 @@ export async function PATCH(request) {
 
     currentOrders[orderIndex].status = status;
     saveOrders(currentOrders);
+    
+    // Trigger email if the status is a user-initiated action
+    if (status === 'Cancelled' || status === 'Return Requested') {
+      sendActionEmail(currentOrders[orderIndex], status).catch(e => console.error(e));
+    }
 
     return NextResponse.json({ success: true, order: currentOrders[orderIndex] });
   } catch (error) {
-    return NextResponse.json({ success: false, message: 'Failed to update order status' }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Failed to update order' }, { status: 500 });
   }
 }
