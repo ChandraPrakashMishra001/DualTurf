@@ -211,6 +211,36 @@ export function AuthProvider({ children }) {
     return profileData
   }
 
+  const updateSavedAddress = async (addressData) => {
+    if (!currentUser) return
+    const updatedProfile = {
+      ...userProfile,
+      savedAddress: addressData,
+    }
+
+    if (auth.currentUser) {
+      try {
+        await setDoc(doc(db, 'users', auth.currentUser.uid), { savedAddress: addressData }, { merge: true })
+      } catch (e) {
+        console.warn('Firestore address update warning:', e)
+      }
+    }
+
+    try {
+      localStorage.setItem('dualturf_current_user', JSON.stringify(updatedProfile))
+      const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
+      const existingIdx = savedUsers.findIndex(u => u.email.toLowerCase() === currentUser.email.toLowerCase())
+      if (existingIdx > -1) {
+        savedUsers[existingIdx].savedAddress = addressData
+        localStorage.setItem('dualturf_users', JSON.stringify(savedUsers))
+      }
+    } catch (err) {}
+
+    setUserProfile(updatedProfile)
+    setCurrentUser(updatedProfile)
+    return updatedProfile
+  }
+
   const logout = async () => {
     try {
       await signOut(auth)
@@ -235,6 +265,7 @@ export function AuthProvider({ children }) {
         loginWithGoogle,
         resendVerification,
         logout,
+        updateSavedAddress,
         fetchUserOrders: () => currentUser && fetchUserOrders(currentUser.uid),
       }}
     >

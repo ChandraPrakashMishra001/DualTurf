@@ -3,10 +3,12 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
 import styles from './page.module.css'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
+  const { currentUser, userProfile } = useAuth()
 
   // Payment method selection: 'gateway' | 'cod'
   const [paymentMethod, setPaymentMethod] = useState('gateway')
@@ -19,6 +21,7 @@ export default function CartPage() {
   const [step, setStep] = useState('cart')
   const [submitting, setSubmitting] = useState(false)
   const [gatewayNotice, setGatewayNotice] = useState(null)
+  const [autoFilled, setAutoFilled] = useState(false)
 
   // Shipping Form State
   const [formData, setFormData] = useState({
@@ -30,6 +33,29 @@ export default function CartPage() {
     state: '',
     pincode: '',
   })
+
+  // Auto-fill address from saved profile (Flipkart style)
+  React.useEffect(() => {
+    const saved = userProfile?.savedAddress || currentUser?.savedAddress
+    if (saved) {
+      setFormData({
+        fullName: saved.fullName || currentUser?.name || '',
+        phone: saved.phone || '',
+        email: currentUser?.email || '',
+        address: saved.address || '',
+        city: saved.city || '',
+        state: saved.state || '',
+        pincode: saved.pincode || '',
+      })
+      setAutoFilled(true)
+    } else if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || currentUser.name || '',
+        email: prev.email || currentUser.email || '',
+      }))
+    }
+  }, [currentUser, userProfile])
 
   // Created Order State
   const [orderId, setOrderId] = useState('')
@@ -245,9 +271,27 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
       {/* STEP 2: SHIPPING ADDRESS FORM */}
       {step === 'address' && (
         <div className={styles.formContainer}>
-          <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '2rem' }}>
+          <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>
             SHIPPING ADDRESS
           </h1>
+
+          {autoFilled && (
+            <div style={{
+              backgroundColor: 'rgba(196, 255, 61, 0.1)',
+              border: '1px solid rgba(196, 255, 61, 0.3)',
+              color: '#c4ff3d',
+              padding: '0.6rem 1rem',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              ⚡ Auto-filled from your saved Flipkart-style account profile!
+            </div>
+          )}
 
           <form onSubmit={handleAddressSubmit} className={styles.addressForm}>
             <div className={styles.formGroup}>
