@@ -48,8 +48,8 @@ export const NAV_LINKS = [
 ];
 
 export const FOOTER_POLICIES = [
-  'Privacy Policy',
-  'Terms and Conditions',
-  'Return Policy',
-  'Cancellation Policy'
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+  { label: 'Return Policy', href: '/return-policy' },
+  { label: 'Cancellation Policy', href: '/cancellation-policy' }
 ];

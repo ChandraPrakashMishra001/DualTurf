@@ -31,7 +31,7 @@ export default function Footer() {
             <ul className={styles.policyList}>
               {FOOTER_POLICIES.map((policy, idx) => (
                 <li key={idx}>
-                  <Link href="/contact">{policy}</Link>
+                  <Link href={policy.href}>{policy.label}</Link>
                 </li>
               ))}
             </ul>
