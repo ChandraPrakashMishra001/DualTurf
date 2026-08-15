@@ -83,30 +83,7 @@ export default function NewsLetter() {
       {/* Main Content — Coming Soon + Countdown Timer + Message */}
       <div className={styles.bottomLeft}>
         <h1 className={styles.heading}>Coming Soon</h1>
-        <p className={styles.launchDate}>Sorry! Great things take time. Launching 15th August!</p>
-
-        {/* Countdown */}
-        <div className={styles.timerRow}>
-          <div className={styles.timerUnit}>
-            <span className={styles.timerNum}>{String(timeLeft.days).padStart(2, '0')}</span>
-            <span className={styles.timerLabel}>Days</span>
-          </div>
-          <span className={styles.timerSep}>:</span>
-          <div className={styles.timerUnit}>
-            <span className={styles.timerNum}>{String(timeLeft.hours).padStart(2, '0')}</span>
-            <span className={styles.timerLabel}>Hours</span>
-          </div>
-          <span className={styles.timerSep}>:</span>
-          <div className={styles.timerUnit}>
-            <span className={styles.timerNum}>{String(timeLeft.minutes).padStart(2, '0')}</span>
-            <span className={styles.timerLabel}>Mins</span>
-          </div>
-          <span className={styles.timerSep}>:</span>
-          <div className={styles.timerUnit}>
-            <span className={styles.timerNum}>{String(timeLeft.seconds).padStart(2, '0')}</span>
-            <span className={styles.timerLabel}>Secs</span>
-          </div>
-        </div>
+        <p className={styles.launchDate}>Great things take time. We will be back shortly!</p>
 
         {/* Slide Dots */}
         <div className={styles.dots}>
