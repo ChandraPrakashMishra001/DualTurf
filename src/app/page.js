@@ -9,11 +9,22 @@ export const revalidate = 0
 
 export default async function Home() {
   const productsList = await getAllProducts()
-  const excludedNames = ['liverpool home', 'manchester united home']
-  const latestDropProducts = (productsList || []).filter(product => {
-    const nameStr = (product.title || product.name || '').toLowerCase()
-    return !excludedNames.some(ex => nameStr.includes(ex))
-  })
+  
+  // Older jerseys shown originally in the Latest Drop
+  const olderJerseySlugs = [
+    'real-madrid-home-fan-version',
+    'fc-barcelona-home-fan-version',
+    'arsenal-home-fan-version',
+    'chelsea-home-fan-version',
+    'ac-milan-home-fan-version',
+    'bayern-munich-home-fan-version',
+    'portugal-pantera-negra-special-edition-fan-version',
+    'portugal-2026-away-fan-version',
+  ]
+
+  const latestDropProducts = olderJerseySlugs
+    .map(slug => (productsList || []).find(p => p.slug === slug))
+    .filter(Boolean)
 
   return (
     <div className={styles.homeContainer}>
