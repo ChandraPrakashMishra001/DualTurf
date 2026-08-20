@@ -10,6 +10,7 @@ import {
   Sparkles,
   Flame,
   Tag,
+  Globe,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -243,31 +244,63 @@ const ClubKits = () => {
   );
 };
 
-/* Categories Content 2: Retro Jerseys */
-const RetroSets = () => {
+/* Categories Content 2: International Kits */
+const InternationalKits = () => {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+        <div>
+          <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#c4ff3d', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <Globe size={14} /> National Teams
+          </h3>
+          <Link href="/products/portugal-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Portugal Home
+          </Link>
+          <Link href="/products/portugal-2026-away-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Portugal 2026 Away
+          </Link>
+          <Link href="/products/spain-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Spain Home
+          </Link>
+          <Link href="/products/spain-away-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc' }}>
+            Spain Away
+          </Link>
+        </div>
+
+        <div>
+          <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#c4ff3d', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <Shield size={14} /> World Cup Giants
+          </h3>
+          <Link href="/products/brazil-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Brazil Home
+          </Link>
+          <Link href="/products/germany-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            Germany Home
+          </Link>
+          <Link href="/products/france-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc', marginBottom: '0.5rem' }}>
+            France Home
+          </Link>
+          <Link href="/products/japan-home-fan-version" style={{ display: 'block', fontSize: '0.875rem', color: '#ccc' }}>
+            Japan Home
+          </Link>
+        </div>
+      </div>
+
       <Link
-        href="/collections/retro-jerseys"
+        href="/collections/international-kits"
         style={{
+          marginLeft: 'auto',
+          marginTop: '1rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
-          padding: '1.25rem',
-          backgroundColor: '#141414',
-          borderRadius: '10px',
-          border: '1px solid rgba(255,255,255,0.08)',
-          transition: 'all 0.2s ease',
+          gap: '0.375rem',
+          fontSize: '0.8125rem',
+          fontWeight: 700,
+          color: '#c4ff3d',
         }}
       >
-        <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'rgba(196, 255, 61, 0.1)' }}>
-          <Flame size={22} style={{ color: '#c4ff3d' }} />
-        </div>
-        <div style={{ textAlign: 'left' }}>
-          <span style={{ display: 'block', fontSize: '1rem', fontWeight: 700, color: '#ffffff' }}>Retro Classics Collection</span>
-          <span style={{ fontSize: '0.8125rem', color: '#888', marginTop: '0.25rem', display: 'block' }}>Explore iconic 2006-07 Milan & Golden Era vintage kits</span>
-        </div>
-        <ArrowRight size={18} style={{ marginLeft: 'auto', color: '#c4ff3d' }} />
+        <span>Explore All International Kits</span>
+        <ArrowRight size={14} />
       </Link>
     </div>
   );
@@ -279,7 +312,7 @@ const TABS = [
     Component: ClubKits,
   },
   {
-    title: "Retro Jerseys",
-    Component: RetroSets,
+    title: "International Kits",
+    Component: InternationalKits,
   },
 ].map((n, idx) => ({ ...n, id: idx + 1 }));
