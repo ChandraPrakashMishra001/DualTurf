@@ -149,20 +149,6 @@ export default async function Home() {
                 At DualTurf, we bring fans across India the highest quality jerseys and matchwear so you can wear your passion with pride.
               </p>
             </ScrollReveal>
-            <div className={styles.statsRow}>
-              <ScrollReveal direction="scale" delay={0.3}>
-                <div className={styles.statItem}>
-                  <span className={styles.statNumber}>10+</span>
-                  <span className={styles.statLabel}>DESIGNS</span>
-                </div>
-              </ScrollReveal>
-              <ScrollReveal direction="scale" delay={0.45}>
-                <div className={styles.statItem}>
-                  <span className={styles.statNumber}>1000+</span>
-                  <span className={styles.statLabel}>HAPPY CUSTOMERS</span>
-                </div>
-              </ScrollReveal>
-            </div>
           </div>
         </div>
       </section>

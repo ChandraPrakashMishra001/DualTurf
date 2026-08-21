@@ -7,19 +7,8 @@ import { FOOTER_POLICIES } from '@/data/products'
 import styles from './Footer.module.css'
 
 export default function Footer() {
-  const [email, setEmail] = useState('')
-  const [subscribed, setSubscribed] = useState(false)
   const pathname = usePathname()
   if (pathname === '/coming-soon') return null
-
-  const handleSubscribe = (e) => {
-    e.preventDefault()
-    if (email) {
-      setSubscribed(true)
-      setEmail('')
-      setTimeout(() => setSubscribed(false), 4000)
-    }
-  }
 
   return (
     <footer className={styles.footer}>
@@ -37,32 +26,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Right: Brand & Newsletter */}
+          {/* Right: Brand & Social */}
           <div className={styles.footerCol}>
             {/* Logo Dual Turf */}
             <div className={styles.logoBox}>
               DUAL TURF
             </div>
-
-            <h3 className={styles.newsletterTitle}>
-              STAY IN THE LOOP WITH OUR WEEKLY NEWSLETTER
-            </h3>
-
-            <form onSubmit={handleSubscribe} className={styles.newsletterForm}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <button type="submit" aria-label="Subscribe">
-                →
-              </button>
-            </form>
-            {subscribed && (
-              <p className={styles.successMsg}>✓ You're subscribed!</p>
-            )}
 
             <div className={styles.socialRow}>
               <a
