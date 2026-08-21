@@ -200,7 +200,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
           {cart.length === 0 ? (
             <div className={styles.emptyCartBox}>
               <h2>Your bag is currently empty.</h2>
-              <p>Explore our premium 2026-27 season kits and retro jerseys to get started!</p>
+              <p>Explore our premium 2026-27 club and international kits to get started!</p>
               <Link href="/collections/all" className="btn-primary" style={{ marginTop: '1.5rem' }}>
                 EXPLORE ALL KITS →
               </Link>

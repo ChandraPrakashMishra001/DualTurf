@@ -16,18 +16,6 @@ export const CATEGORIES = [
     image: '/images/RMFC.PNG'
   },
   {
-    id: 'retro-jerseys',
-    name: 'RETRO JERSEYS',
-    slug: 'retro-jerseys',
-    image: '/images/ACM.PNG'
-  },
-  {
-    id: 'jerseys-with-shorts',
-    name: 'JERSEYS WITH SHORTS',
-    slug: 'jerseys-with-shorts',
-    image: '/images/FCBA.PNG'
-  },
-  {
     id: 'international-kits',
     name: 'INTERNATIONAL KITS',
     slug: 'international-kits',
