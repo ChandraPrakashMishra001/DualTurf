@@ -111,7 +111,7 @@ export default function ProductClient({ product, relatedProducts, category }) {
             <li>Official club detailing & high-density crest</li>
             <li>Machine wash cold inside-out</li>
             <li>{product.type || 'Stadium / Regular athletic fit'}</li>
-            <li>Dispatched within 48 hrs from Burla, Sambalpur</li>
+            <li>Dispatched within 48 hrs from Bhubaneswar, Odisha</li>
           </ul>
 
           <div className={styles.accordionGroup}>
