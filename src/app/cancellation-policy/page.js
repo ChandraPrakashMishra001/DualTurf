@@ -13,7 +13,7 @@ export default function CancellationPolicy() {
           
           <section>
             <h2 style={{ color: '#fff', marginBottom: '1rem' }}>1. Order Cancellations</h2>
-            <p>You may cancel your order within 24 hours of placing it, provided it has not yet been dispatched. Once an order has been dispatched, it cannot be cancelled and must go through the standard return process.</p>
+            <p>You may cancel your order within 24 hours of placing it, provided it has not yet been dispatched. Once an order has been dispatched, it cannot be cancelled and is subject to our replacement policy if defective or if the wrong size was sent.</p>
           </section>
 
           <section>

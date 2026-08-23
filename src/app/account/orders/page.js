@@ -90,8 +90,8 @@ export default function MyOrdersPage() {
     if (newStatus === 'Cancelled') {
       const confirm = window.confirm('Are you sure you want to cancel this order?')
       if (!confirm) return
-    } else if (newStatus === 'Return Requested') {
-      const confirm = window.confirm('Are you sure you want to request a return? Our team will contact you shortly.')
+    } else if (newStatus === 'Replacement Requested' || newStatus === 'Return Requested') {
+      const confirm = window.confirm('Are you sure you want to request a replacement? Our team will contact you shortly.')
       if (!confirm) return
     }
 
@@ -292,11 +292,11 @@ export default function MyOrdersPage() {
                     
                     {isReturnable && (
                       <button 
-                        onClick={() => handleAction(order.orderId, 'Return Requested')}
+                        onClick={() => handleAction(order.orderId, 'Replacement Requested')}
                         disabled={processingId === order.orderId}
                         className={styles.returnBtn}
                       >
-                        {processingId === order.orderId ? 'Processing...' : 'Request Return'}
+                        {processingId === order.orderId ? 'Processing...' : 'Request Replacement'}
                       </button>
                     )}
                   </div>

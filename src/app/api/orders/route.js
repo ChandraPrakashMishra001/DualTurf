@@ -243,7 +243,7 @@ export async function PATCH(request) {
     saveOrders(currentOrders);
     
     // Trigger email if the status is a user-initiated action
-    if (status === 'Cancelled' || status === 'Return Requested') {
+    if (status === 'Cancelled' || status === 'Return Requested' || status === 'Replacement Requested') {
       sendActionEmail(currentOrders[orderIndex], status).catch(e => console.error(e));
     }
 

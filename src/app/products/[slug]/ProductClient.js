@@ -127,7 +127,6 @@ export default function ProductClient({ product, relatedProducts, category }) {
                 <div className={styles.accordionContent}>
                   <p>• Dispatched within 48 hours across India.</p>
                   <p>• Delivery time: 5-7 business days.</p>
-                  <p>• Free shipping on orders above ₹999.</p>
                 </div>
               )}
             </div>
@@ -137,14 +136,14 @@ export default function ProductClient({ product, relatedProducts, category }) {
                 className={styles.accordionHeader} 
                 onClick={() => toggleAccordion('return')}
               >
-                Return Information
+                Replacement Policy
                 <span>{openAccordion === 'return' ? '-' : '+'}</span>
               </button>
               {openAccordion === 'return' && (
                 <div className={styles.accordionContent}>
-                  <p>• 5-day size exchange guarantee.</p>
-                  <p>• No hassle returns for manufacturing defects.</p>
-                  <p>• Custom printed items non-refundable.</p>
+                  <p>• Replacement when we send the wrong size.</p>
+                  <p>• Replacement only on manufacturing defects.</p>
+                  <p>• No returns or refunds provided (replacement only).</p>
                 </div>
               )}
             </div>
