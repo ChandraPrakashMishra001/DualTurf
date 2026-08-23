@@ -8,7 +8,7 @@ import styles from './page.module.css'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
-  const { currentUser, userProfile } = useAuth()
+  const { currentUser, userProfile, loginWithGoogle } = useAuth()
 
   // Payment method selection: 'partial_cod' | 'full_online'
   const [paymentMethod, setPaymentMethod] = useState('partial_cod')
@@ -47,14 +47,14 @@ export default function CartPage() {
     pincode: '',
   })
 
-  // Auto-fill address from saved profile (Flipkart style)
+  // Auto-fill address and customer info from saved profile
   React.useEffect(() => {
     const saved = userProfile?.savedAddress || currentUser?.savedAddress
     if (saved) {
       setFormData({
-        fullName: saved.fullName || currentUser?.name || '',
+        fullName: saved.fullName || userProfile?.name || currentUser?.name || '',
         phone: saved.phone || '',
-        email: currentUser?.email || '',
+        email: saved.email || currentUser?.email || '',
         address: saved.address || '',
         city: saved.city || '',
         state: saved.state || '',
@@ -62,9 +62,9 @@ export default function CartPage() {
       })
       setAutoFilled(true)
     } else if (currentUser) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        fullName: prev.fullName || currentUser.name || '',
+        fullName: prev.fullName || currentUser.name || userProfile?.name || '',
         email: prev.email || currentUser.email || '',
       }))
     }
@@ -86,8 +86,28 @@ export default function CartPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const handleProceedToShipping = () => {
+    if (!currentUser) {
+      window.location.href = '/account/login?redirect=/cart'
+      return
+    }
+    setStep('address')
+  }
+
+  const handleGoogleQuickLogin = async () => {
+    try {
+      await loginWithGoogle()
+    } catch (err) {
+      console.error('Google quick sign-in error:', err)
+    }
+  }
+
   const handleAddressSubmit = (e) => {
     e.preventDefault()
+    if (!currentUser) {
+      window.location.href = '/account/login?redirect=/cart'
+      return
+    }
     setStep('payment')
   }
 
@@ -405,13 +425,96 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                   </div>
                 )}
 
-                <button
-                  className="btn-primary"
-                  style={{ width: '100%', marginTop: '1.25rem' }}
-                  onClick={() => setStep('address')}
-                >
-                  PROCEED TO SHIPPING →
-                </button>
+                {currentUser ? (
+                  <>
+                    <div style={{
+                      marginTop: '1.25rem',
+                      padding: '0.65rem 0.85rem',
+                      backgroundColor: 'rgba(196, 255, 61, 0.08)',
+                      border: '1px solid rgba(196, 255, 61, 0.25)',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}>
+                      <span>👤 Logged in as <strong style={{ color: '#c4ff3d' }}>{currentUser.name || currentUser.email}</strong></span>
+                    </div>
+
+                    <button
+                      className="btn-primary"
+                      style={{ width: '100%', marginTop: '1rem' }}
+                      onClick={handleProceedToShipping}
+                    >
+                      PROCEED TO SHIPPING →
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div style={{
+                      marginTop: '1.25rem',
+                      padding: '1rem',
+                      backgroundColor: 'rgba(255, 184, 0, 0.08)',
+                      border: '1px solid rgba(255, 184, 0, 0.35)',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontSize: '0.825rem',
+                      lineHeight: '1.5'
+                    }}>
+                      <strong style={{ color: '#FFD700', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem', fontSize: '0.875rem' }}>
+                        🔒 Login Required to Order
+                      </strong>
+                      Please sign in or create an account to proceed with checkout and track your jersey orders.
+                    </div>
+
+                    <Link
+                      href="/account/login?redirect=/cart"
+                      className="btn-primary"
+                      style={{
+                        width: '100%',
+                        marginTop: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                        height: '48px',
+                        fontSize: '0.925rem'
+                      }}
+                    >
+                      🔒 LOGIN / REGISTER TO CHECKOUT →
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleGoogleQuickLogin}
+                      style={{
+                        width: '100%',
+                        marginTop: '0.6rem',
+                        backgroundColor: '#ffffff',
+                        color: '#000000',
+                        border: 'none',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '6px',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                      </svg>
+                      Quick Sign In with Google
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -425,23 +528,35 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
             SHIPPING ADDRESS
           </h1>
 
-          {autoFilled && (
-            <div style={{
-              backgroundColor: 'rgba(196, 255, 61, 0.1)',
-              border: '1px solid rgba(196, 255, 61, 0.3)',
-              color: '#c4ff3d',
-              padding: '0.6rem 1rem',
-              borderRadius: '6px',
-              fontSize: '0.85rem',
-              fontWeight: '600',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              ⚡ Auto-filled from your saved account address!
+          {!currentUser ? (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', backgroundColor: '#111111', borderRadius: '12px', border: '1px solid #333' }}>
+              <h3 style={{ color: '#FFD700', marginBottom: '0.75rem' }}>🔒 Please Sign In to Enter Shipping Address</h3>
+              <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                You must be logged into your DualTurf account to complete checkout.
+              </p>
+              <Link href="/account/login?redirect=/cart" className="btn-primary" style={{ display: 'inline-block', padding: '0.875rem 2rem' }}>
+                SIGN IN / CREATE ACCOUNT →
+              </Link>
             </div>
-          )}
+          ) : (
+            <>
+              {autoFilled && (
+                <div style={{
+                  backgroundColor: 'rgba(196, 255, 61, 0.1)',
+                  border: '1px solid rgba(196, 255, 61, 0.3)',
+                  color: '#c4ff3d',
+                  padding: '0.6rem 1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  ⚡ Auto-filled from your saved account address!
+                </div>
+              )}
 
           <form onSubmit={handleAddressSubmit} className={styles.addressForm}>
             <div className={styles.formGroup}>
@@ -539,6 +654,8 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
               </button>
             </div>
           </form>
+          </>
+          )}
         </div>
       )}
 
@@ -549,25 +666,37 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
             PAYMENT METHOD
           </h1>
 
-          {/* Payment Method Switcher */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '650px', margin: '0 auto 2rem auto' }}>
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('partial_cod')}
-              style={{
-                backgroundColor: paymentMethod === 'partial_cod' ? '#141414' : '#0d0d0d',
-                color: '#ffffff',
-                border: paymentMethod === 'partial_cod' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
-                padding: '1.25rem 1.1rem',
-                borderRadius: '10px',
-                fontWeight: '700',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                textAlign: 'left',
-                position: 'relative',
-                transition: 'all 0.2s ease',
-              }}
-            >
+          {!currentUser ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', backgroundColor: '#111111', borderRadius: '12px', border: '1px solid #333', maxWidth: '650px', margin: '0 auto' }}>
+              <h3 style={{ color: '#FFD700', marginBottom: '0.75rem', fontSize: '1.2rem' }}>🔒 Please Sign In to Complete Payment</h3>
+              <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                You must be logged into your DualTurf account to access payment methods and complete your order.
+              </p>
+              <Link href="/account/login?redirect=/cart" className="btn-primary" style={{ display: 'inline-block', padding: '0.875rem 2rem' }}>
+                SIGN IN / CREATE ACCOUNT →
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Payment Method Switcher */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '650px', margin: '0 auto 2rem auto' }}>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('partial_cod')}
+                  style={{
+                    backgroundColor: paymentMethod === 'partial_cod' ? '#141414' : '#0d0d0d',
+                    color: '#ffffff',
+                    border: paymentMethod === 'partial_cod' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
+                    padding: '1.25rem 1.1rem',
+                    borderRadius: '10px',
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                 <span style={{ color: paymentMethod === 'partial_cod' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>⚡ Partial COD</span>
                 <span style={{ fontSize: '0.7rem', backgroundColor: '#c4ff3d', color: '#000', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>RECOMMENDED</span>
@@ -673,6 +802,8 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
               </form>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 

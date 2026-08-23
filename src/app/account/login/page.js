@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const redirectUrl = searchParams.get('redirect');
   const { currentUser, userProfile, userOrders, login, loginWithGoogle, resendVerification, logout } = useAuth();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -22,6 +24,13 @@ function LoginForm() {
     }
   }, [searchParams]);
 
+  // If already logged in and redirect parameter exists, navigate immediately
+  useEffect(() => {
+    if (currentUser && redirectUrl) {
+      router.push(redirectUrl);
+    }
+  }, [currentUser, redirectUrl, router]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -33,6 +42,9 @@ function LoginForm() {
     try {
       await login(formData.email, formData.password);
       setSuccessMsg('Welcome back!');
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      }
     } catch (err) {
       let msg = 'Invalid email or password.';
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
@@ -49,6 +61,9 @@ function LoginForm() {
     try {
       await loginWithGoogle();
       setSuccessMsg('Signed in with Google!');
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      }
     } catch (err) {
       let msg = err.message || 'Google sign-in failed. Please try again.';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {

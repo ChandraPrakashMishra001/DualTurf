@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
   const { register, loginWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -29,7 +31,11 @@ export default function RegisterPage() {
 
     try {
       await register(formData.firstName, formData.lastName, formData.email, formData.password);
-      router.push('/account/login?registered=true');
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else {
+        router.push('/account/login?registered=true');
+      }
     } catch (err) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -41,7 +47,11 @@ export default function RegisterPage() {
     setError(null);
     try {
       await loginWithGoogle();
-      router.push('/account/login');
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else {
+        router.push('/account/login');
+      }
     } catch (err) {
       let msg = err.message || 'Google sign-in failed. Please try again.';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
@@ -154,9 +164,19 @@ export default function RegisterPage() {
         </form>
         
         <div className={styles.links}>
-          <Link href="/account/login" className={styles.link}>Already have an account? Sign In</Link>
+          <Link href={`/account/login${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className={styles.link}>
+            Already have an account? Sign In
+          </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }
