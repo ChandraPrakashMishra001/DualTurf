@@ -10,8 +10,8 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
   const { currentUser, userProfile, loginWithGoogle } = useAuth()
 
-  // Payment method selection: 'partial_cod' | 'full_online'
-  const [paymentMethod, setPaymentMethod] = useState('partial_cod')
+  // Payment method selection: 'full_online' | 'partial_cod'
+  const [paymentMethod, setPaymentMethod] = useState('full_online')
 
   // Shipping Fee configuration
   const shippingFee = cart.length > 0 ? 80 : 0
@@ -682,6 +682,32 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '650px', margin: '0 auto 2rem auto' }}>
                 <button
                   type="button"
+                  onClick={() => setPaymentMethod('full_online')}
+                  style={{
+                    backgroundColor: paymentMethod === 'full_online' ? '#141414' : '#0d0d0d',
+                    color: '#ffffff',
+                    border: paymentMethod === 'full_online' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
+                    padding: '1.25rem 1.1rem',
+                    borderRadius: '10px',
+                    fontWeight: '700',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                    <span style={{ color: paymentMethod === 'full_online' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>🔒 100% Online Payment</span>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: '#c4ff3d', color: '#000', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>RECOMMENDED</span>
+                  </div>
+                  <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
+                    Pay <strong>₹{totalAmount}</strong> online via UPI, Cards, or NetBanking for fastest priority dispatch.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setPaymentMethod('partial_cod')}
                   style={{
                     backgroundColor: paymentMethod === 'partial_cod' ? '#141414' : '#0d0d0d',
@@ -697,39 +723,14 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                     transition: 'all 0.2s ease',
                   }}
                 >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span style={{ color: paymentMethod === 'partial_cod' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>⚡ Partial COD</span>
-                <span style={{ fontSize: '0.7rem', backgroundColor: '#c4ff3d', color: '#000', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>RECOMMENDED</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                    <span style={{ color: paymentMethod === 'partial_cod' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>⚡ Partial COD</span>
+                  </div>
+                  <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
+                    Pay <strong>₹{advanceAmount} advance online</strong> now, and remaining <strong>₹{remainingCODAmount}</strong> on delivery.
+                  </p>
+                </button>
               </div>
-              <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
-                Pay <strong>₹{advanceAmount} advance online</strong> now, and remaining <strong>₹{remainingCODAmount}</strong> on delivery.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('full_online')}
-              style={{
-                backgroundColor: paymentMethod === 'full_online' ? '#141414' : '#0d0d0d',
-                color: '#ffffff',
-                border: paymentMethod === 'full_online' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
-                padding: '1.25rem 1.1rem',
-                borderRadius: '10px',
-                fontWeight: '700',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span style={{ color: paymentMethod === 'full_online' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>🔒 Full Online Payment</span>
-              </div>
-              <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
-                Pay 100% <strong>₹{totalAmount}</strong> online via UPI, Cards, or NetBanking.
-              </p>
-            </button>
-          </div>
 
           <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '650px', margin: '0 auto' }}>
             <div className={styles.upiDetails}>
