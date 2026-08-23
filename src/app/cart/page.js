@@ -125,7 +125,7 @@ ${formData.address}, ${formData.city}, ${formData.state} - ${formData.pincode}
 
 🛍️ *Items Ordered:*
 ${cart.map((it) => {
-  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''}]` : ''
+  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''} (+₹200)]` : ''
   return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
 }).join('\n')}
 
@@ -156,7 +156,7 @@ ${placedOrder.customer.address}, ${placedOrder.customer.city}, ${placedOrder.cus
 
 🛍️ *Items Ordered:*
 ${placedOrder.items.map((it) => {
-  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''}]` : ''
+  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''} (+₹200)]` : ''
   return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
 }).join('\n')}
 
@@ -222,7 +222,7 @@ ${placedOrder.items.map((it) => {
                       <p className={styles.itemSize}>Size: <strong>{item.size}</strong></p>
                       {(item.customName || item.customNumber) && (
                         <p style={{ fontSize: '0.8125rem', color: '#c4ff3d', fontWeight: '700', marginTop: '0.25rem' }}>
-                          ⚡ Player Print: {item.customName || ''} {item.customNumber ? `#${item.customNumber}` : ''}
+                          ⚡ Player Print: {item.customName || ''} {item.customNumber ? `#${item.customNumber}` : ''} <span style={{ color: '#888', fontWeight: '400' }}>(+₹200)</span>
                         </p>
                       )}
                       <p className={styles.itemPrice}>₹{item.price}</p>
@@ -266,9 +266,24 @@ ${placedOrder.items.map((it) => {
                   <span>₹{totalAmount}</span>
                 </div>
 
+                {cart.some(it => it.customName || it.customNumber) && (
+                  <div style={{
+                    marginTop: '1.25rem',
+                    padding: '0.75rem',
+                    backgroundColor: 'rgba(196, 255, 61, 0.08)',
+                    border: '1px solid rgba(196, 255, 61, 0.25)',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    color: '#c4ff3d',
+                    lineHeight: '1.4'
+                  }}>
+                    ⏱️ <strong>Customized Print:</strong> Delivery time is extended by 3–5 business days for precision player printing.
+                  </div>
+                )}
+
                 <button
                   className="btn-primary"
-                  style={{ width: '100%', marginTop: '1.5rem' }}
+                  style={{ width: '100%', marginTop: '1.25rem' }}
                   onClick={() => setStep('address')}
                 >
                   PROCEED TO SHIPPING →

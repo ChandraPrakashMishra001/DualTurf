@@ -39,6 +39,9 @@ export default function ProductClient({ product, relatedProducts, category }) {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  const hasCustomization = Boolean(customName.trim() || customNumber.trim());
+  const currentPrice = (Number(product.price) || 0) + (hasCustomization ? 200 : 0);
+
   const imageList = product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
   const displayMainImg = selectedImg || product.image;
   const availableSizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
@@ -86,10 +89,15 @@ export default function ProductClient({ product, relatedProducts, category }) {
         <div className={styles.productInfo}>
           <h1 className={styles.productName}>{product.title || product.name}</h1>
           
-          <div className={styles.priceContainer}>
-            <span className={styles.price}>₹{product.price}</span>
+          <div className={styles.priceContainer} style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+            <span className={styles.price}>₹{currentPrice}</span>
             {product.originalPrice && (
-              <span className={styles.originalPrice}>₹{product.originalPrice}</span>
+              <span className={styles.originalPrice}>₹{Number(product.originalPrice) + (hasCustomization ? 200 : 0)}</span>
+            )}
+            {hasCustomization && (
+              <span style={{ fontSize: '0.8125rem', color: '#c4ff3d', fontWeight: 700, backgroundColor: 'rgba(196, 255, 61, 0.12)', padding: '0.25rem 0.6rem', borderRadius: '4px', border: '1px solid rgba(196, 255, 61, 0.3)' }}>
+                +₹200 Custom Player Print
+              </span>
             )}
           </div>
 
@@ -120,11 +128,11 @@ export default function ProductClient({ product, relatedProducts, category }) {
           {/* Jersey Customization / Player Print */}
           <div className={styles.customizationSection}>
             <div className={styles.customizationHeader}>
-              <span className={styles.customizationTitle}>⚡ CUSTOMIZE JERSEY PRINT (OPTIONAL)</span>
+              <span className={styles.customizationTitle}>⚡ CUSTOMIZE JERSEY PRINT (+₹200)</span>
             </div>
 
             <div className={styles.customNoticeBox}>
-              <span>⚠️ Note: Only official football player names are accepted. Any custom or random names will result in order cancellation and a full refund.</span>
+              <span>⚠️ Note: Customization charges are ₹200. Delivery time will get extended by 3–5 days for custom printing. Only official football player names are accepted (random names will result in order cancellation and refund).</span>
             </div>
 
             <div className={styles.customInputRow}>
@@ -155,7 +163,7 @@ export default function ProductClient({ product, relatedProducts, category }) {
           </div>
 
           <button className="btn-primary" style={{ width: '100%', height: '52px', marginTop: '0.5rem' }} onClick={handleAddToCart}>
-            ADD TO BAG
+            ADD TO BAG • ₹{currentPrice}
           </button>
 
           <ul className={styles.features}>
@@ -178,7 +186,8 @@ export default function ProductClient({ product, relatedProducts, category }) {
               {openAccordion === 'shipping' && (
                 <div className={styles.accordionContent}>
                   <p>• Dispatched within 48 hours across India.</p>
-                  <p>• Delivery time: 5-7 business days.</p>
+                  <p>• Standard Delivery: 5–7 business days.</p>
+                  <p>• Customized Jersey Delivery: Extended by 3–5 days for precision heat-press printing.</p>
                 </div>
               )}
             </div>

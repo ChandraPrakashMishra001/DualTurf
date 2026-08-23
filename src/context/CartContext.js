@@ -32,6 +32,9 @@ export function CartProvider({ children }) {
   const addToCart = (product, size = 'M', quantity = 1, customization = {}) => {
     const cName = (customization.customName || '').trim().toUpperCase()
     const cNum = (customization.customNumber || '').trim()
+    const hasCustomization = Boolean(cName || cNum)
+    const customizationFee = hasCustomization ? 200 : 0
+    const finalItemPrice = (Number(product.price) || 0) + customizationFee
 
     setCart((prevCart) => {
       const existingIndex = prevCart.findIndex(
@@ -53,7 +56,9 @@ export function CartProvider({ children }) {
             id: product.id,
             slug: product.slug,
             title: product.title || product.name,
-            price: product.price,
+            basePrice: Number(product.price) || 0,
+            price: finalItemPrice,
+            customizationFee: customizationFee,
             image: product.image,
             size: size,
             customName: cName,
