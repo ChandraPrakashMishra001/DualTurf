@@ -39,30 +39,34 @@ export function AuthProvider({ children }) {
     }
 
     // Check for Google redirect result (for mobile phones)
-    try {
-      getRedirectResult(auth)
-        .then(async (result) => {
-          if (result && result.user) {
-            const user = result.user
-            const profileData = {
-              uid: user.uid,
-              name: user.displayName || user.email,
-              email: user.email,
-              emailVerified: true,
-              photoURL: user.photoURL,
-              createdAt: new Date().toISOString(),
+    if (typeof window !== 'undefined' && auth) {
+      try {
+        getRedirectResult(auth)
+          .then(async (result) => {
+            if (result && result.user) {
+              const user = result.user
+              const profileData = {
+                uid: user.uid,
+                name: user.displayName || user.email,
+                email: user.email.toLowerCase(),
+                emailVerified: true,
+                photoURL: user.photoURL,
+                createdAt: new Date().toISOString(),
+              }
+              try {
+                localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
+              } catch (err) {}
+              setCurrentUser(profileData)
+              setUserProfile(profileData)
             }
-            try {
-              localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
-            } catch (err) {}
-            setCurrentUser(profileData)
-            setUserProfile(profileData)
-          }
-        })
-        .catch((err) => {
-          console.warn('Redirect auth notice:', err)
-        })
-    } catch (err) {}
+          })
+          .catch((err) => {
+            if (!err?.message?.includes('closing') && !err?.message?.includes('hidden')) {
+              console.warn('Redirect auth notice:', err?.message)
+            }
+          })
+      } catch (err) {}
+    }
 
     try {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
