@@ -25,21 +25,20 @@ function LoginForm() {
   }, [searchParams]);
 
   // If already logged in, redirect to intended destination.
-  // On Android: after signInWithRedirect, page reloads without ?redirect= param,
-  // so we also check sessionStorage for the pending destination.
+  // On Android: after signInWithRedirect, the page reloads to /account/login
+  // without query params. We read the destination from localStorage (set before redirect).
   useEffect(() => {
     if (!currentUser) return;
     const destination =
       redirectUrl ||
       (() => {
-        try { return sessionStorage.getItem('dualturf_auth_redirect') } catch { return null }
+        try { return localStorage.getItem('dualturf_auth_redirect') } catch { return null }
       })();
     if (destination) {
-      try { sessionStorage.removeItem('dualturf_auth_redirect') } catch {}
+      try { localStorage.removeItem('dualturf_auth_redirect') } catch {}
       router.push(destination);
-    } else {
-      // Logged in with no specific destination — show account dashboard (already rendered below)
     }
+    // If no destination, stay on page — login page will render the account dashboard
   }, [currentUser, redirectUrl, router]);
 
   const handleChange = (e) => {
@@ -69,20 +68,22 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    // Store redirect destination in localStorage FIRST — before anything else.
+    // On Android, signInWithRedirect navigates away immediately, and sessionStorage
+    // may not survive the cross-origin round-trip. localStorage always does.
+    const destination = redirectUrl || '/account/orders';
+    try { localStorage.setItem('dualturf_auth_redirect', destination); } catch {}
     try {
-      // On Android, loginWithGoogle triggers a page redirect — no need to handle navigation here
-      // On iOS/desktop, it returns a profile and we navigate manually
-      const result = await loginWithGoogle(redirectUrl || '/account/orders');
+      const result = await loginWithGoogle(destination);
       if (result) {
-        setSuccessMsg('Signed in with Google!');
-        if (redirectUrl) {
-          router.push(redirectUrl);
-        } else {
-          router.push('/account/orders');
-        }
+        // iOS/Desktop: popup returned immediately, navigate now
+        try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
+        router.push(destination);
       }
-      // If result is undefined, Android is doing a redirect — page will reload automatically
+      // Android: result is undefined — signInWithRedirect navigated away.
+      // The page will reload and the useEffect above handles navigation.
     } catch (err) {
+      try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
       let msg = err.message || 'Google sign-in failed. Please try again.';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
         msg = '⚠️ Google Provider is currently disabled in Firebase. Enable Google under Firebase Console → Authentication → Sign-in method.';

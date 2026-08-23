@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
           try {
             localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
             // NOTE: navigation is handled by the login page's useEffect which watches currentUser
-            // and reads sessionStorage('dualturf_auth_redirect') set before signInWithRedirect
+            // and reads localStorage('dualturf_auth_redirect') set before signInWithRedirect
           } catch (e) {}
           setCurrentUser(profileData)
           setUserProfile(profileData)
@@ -258,10 +258,12 @@ export function AuthProvider({ children }) {
     // Android Chrome: signInWithPopup causes IndexedDB "database closing" error
     // because opening a popup suspends the original tab's IndexedDB connection.
     // Solution: use signInWithRedirect on Android, popup on iOS/desktop.
+    // We use localStorage (not sessionStorage) because sessionStorage can be
+    // cleared by some Android browsers during cross-origin OAuth redirects.
     if (isAndroid()) {
       try {
         if (redirectUrl) {
-          sessionStorage.setItem('dualturf_auth_redirect', redirectUrl)
+          localStorage.setItem('dualturf_auth_redirect', redirectUrl)
         }
         await signInWithRedirect(auth, provider)
         // Page will reload — result handled by getRedirectResult in useEffect

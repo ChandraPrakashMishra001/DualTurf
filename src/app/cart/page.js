@@ -95,12 +95,17 @@ export default function CartPage() {
   }
 
   const handleGoogleQuickLogin = async () => {
+    // Store destination before calling — localStorage survives cross-origin redirects on Android
+    try { localStorage.setItem('dualturf_auth_redirect', '/cart') } catch {}
     try {
       const result = await loginWithGoogle('/cart')
-      // On iOS/desktop: result is returned
-      // On Android: page redirects to Google and comes back — no result here
-      if (!result) return
+      if (result) {
+        // iOS/Desktop: popup done, clear the stored redirect
+        try { localStorage.removeItem('dualturf_auth_redirect') } catch {}
+      }
+      // Android: undefined result means redirect in progress — page will reload
     } catch (err) {
+      try { localStorage.removeItem('dualturf_auth_redirect') } catch {}
       console.warn('Google quick sign-in fallback on mobile:', err)
       window.location.href = '/account/login?redirect=/cart'
     }
