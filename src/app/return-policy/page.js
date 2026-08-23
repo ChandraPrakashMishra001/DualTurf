@@ -21,13 +21,22 @@ export default function ReturnPolicy() {
           </section>
 
           <section>
-            <h2 style={{ color: '#fff', marginBottom: '1rem' }}>2. Replacement Request Process</h2>
-            <p>To request a replacement, please contact our support team via WhatsApp (+91-7656072801) or email (turfdual@gmail.com) within 48 hours of delivery with your order ID, unboxing video/photos, and a description of the issue.</p>
+            <h2 style={{ color: '#fff', marginBottom: '1rem' }}>2. Mandatory Unboxing Video for Claims</h2>
+            <p>A continuous, uncut unboxing video starting from the sealed courier package is <strong>strictly mandatory</strong> for any replacement or defect claims. The outer shipping label and tracking number must be clearly visible in the video.</p>
           </section>
 
           <section>
-            <h2 style={{ color: '#fff', marginBottom: '1rem' }}>3. Eligibility & Conditions</h2>
-            <p>To be eligible for replacement, the product must be unused, unwashed, and in the same condition that you received it, with all original tags attached. Items damaged due to improper washing or misuse are not eligible for replacement.</p>
+            <h2 style={{ color: '#fff', marginBottom: '1rem' }}>3. Eligibility & Packaging Conditions</h2>
+            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <li>All original brand tags, labels, and barcodes must be attached to the garment.</li>
+              <li>The item must be returned with its original branded polybag and complete packaging.</li>
+              <li>The jersey must be in unworn, unwashed, and undamaged condition.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 style={{ color: '#fff', marginBottom: '1rem' }}>4. How to Request Replacement</h2>
+            <p>Contact our support team via WhatsApp (+91-7656072801) or email (turfdual@gmail.com) within 48 hours of delivery with your Order ID and the unboxing video.</p>
           </section>
         </div>
       </div>
