@@ -17,10 +17,18 @@ export default function CartPage() {
   const shippingFee = cart.length > 0 ? 80 : 0
   const totalAmount = subtotal + shippingFee
 
-  // Partial COD Calculations (₹199 Advance standard, or ₹399 if jersey customization is added)
-  const hasCustomizationInCart = cart.some((it) => Boolean(it.customName || it.customNumber))
-  const advanceAmount = hasCustomizationInCart ? 399 : 199
+  // Partial COD Calculations (₹399 per customized jersey, ₹199 per standard jersey)
+  const customizedCount = cart.reduce((sum, it) => (it.customName || it.customNumber) ? sum + it.quantity : sum, 0)
+  const standardCount = cart.reduce((sum, it) => (!it.customName && !it.customNumber) ? sum + it.quantity : sum, 0)
+  const hasCustomizationInCart = customizedCount > 0
+
+  const advanceAmount = (customizedCount * 399) + (standardCount * 199)
   const remainingCODAmount = Math.max(0, totalAmount - advanceAmount)
+
+  const advanceBreakdownText = [
+    customizedCount > 0 ? `${customizedCount}x Customized (₹399 each = ₹${customizedCount * 399})` : null,
+    standardCount > 0 ? `${standardCount}x Standard (₹199 each = ₹${standardCount * 199})` : null,
+  ].filter(Boolean).join(' + ')
 
   // Checkout step state: 'cart' | 'address' | 'payment' | 'confirmed'
   const [step, setStep] = useState('cart')
@@ -155,7 +163,7 @@ ${cart.map((it) => {
 💳 *Payment Breakdown:*
 • Payment Mode: ${isPartial ? 'Partial Cash on Delivery (Partial COD)' : 'Full Online Payment'}
 • Total Order Value: ₹${totalAmount} (Subtotal: ₹${subtotal} + Shipping: ₹${shippingFee})
-${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} ${hasCustomizationInCart ? '(₹199 Booking + ₹200 Custom Print)' : '(₹199 Booking Advance)'}\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online (Razorpay): ₹${totalAmount}`}`
+${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} (${advanceBreakdownText})\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online (Razorpay): ₹${totalAmount}`}`
 
       const waUrl = `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
       setTimeout(() => {
@@ -626,9 +634,7 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                     <span>₹{advanceAmount}</span>
                   </div>
                   <p style={{ fontSize: '0.8rem', color: '#aaaaaa', margin: 0 }}>
-                    {hasCustomizationInCart
-                      ? '• Includes ₹199 order booking advance + ₹200 jersey customization fee.'
-                      : '• Includes ₹199 order confirmation & booking advance.'}
+                    • Advance Breakdown: <strong>{advanceBreakdownText}</strong>
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ffffff', fontWeight: '700', fontSize: '0.95rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.6rem' }}>
                     <span>💵 Remaining Balance to Collect on Delivery (COD):</span>
@@ -694,7 +700,7 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                 </span>
                 <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#888' }}>
                   {paymentMethod === 'partial_cod'
-                    ? `Remaining ₹${remainingCODAmount} will be collected upon delivery`
+                    ? `${advanceBreakdownText} • Balance ₹${remainingCODAmount} on delivery`
                     : '100% Full Payment via Gateway'}
                 </p>
               </div>
