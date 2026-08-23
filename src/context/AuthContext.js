@@ -38,45 +38,16 @@ export function AuthProvider({ children }) {
       console.warn('LocalStorage session read error:', e)
     }
 
-    // Check for Google redirect result (for mobile phones)
-    if (typeof window !== 'undefined' && auth) {
-      try {
-        getRedirectResult(auth)
-          .then(async (result) => {
-            if (result && result.user) {
-              const user = result.user
-              const profileData = {
-                uid: user.uid,
-                name: user.displayName || user.email,
-                email: user.email.toLowerCase(),
-                emailVerified: true,
-                photoURL: user.photoURL,
-                createdAt: new Date().toISOString(),
-              }
-              try {
-                localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
-              } catch (err) {}
-              setCurrentUser(profileData)
-              setUserProfile(profileData)
-            }
-          })
-          .catch((err) => {
-            if (!err?.message?.includes('closing') && !err?.message?.includes('hidden')) {
-              console.warn('Redirect auth notice:', err?.message)
-            }
-          })
-      } catch (err) {}
-    }
-
+    // OnAuthStateChanged listener for clean session management
     try {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           const sessionUser = {
             uid: user.uid,
-            name: user.displayName || user.email,
+            name: user.displayName || user.email?.split('@')[0] || 'Customer',
             email: user.email,
             emailVerified: user.emailVerified,
-            photoURL: user.photoURL,
+            photoURL: user.photoURL || '',
           }
           setCurrentUser(sessionUser)
           try {
@@ -250,31 +221,22 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, provider)
       user = result.user
     } catch (popupErr) {
-      console.warn('Popup sign in failed on phone browser:', popupErr.code, popupErr.message)
-      
-      // On mobile browsers where popups are blocked by default:
+      console.warn('Popup sign in error:', popupErr.code, popupErr.message)
+
       if (
         popupErr.code === 'auth/popup-blocked' ||
         popupErr.code === 'auth/cancelled-popup-request' ||
         popupErr.code === 'auth/popup-closed-by-user'
       ) {
-        try {
-          await signInWithRedirect(auth, provider)
-          return
-        } catch (redirectErr) {
-          console.warn('Redirect auth error:', redirectErr)
-        }
-      }
-
-      // Provide user-friendly message
-      if (popupErr.code === 'auth/popup-blocked') {
-        throw new Error('Google sign-in popup was blocked by your browser. Please allow popups or use email sign-in.')
+        throw new Error('Google sign-in popup was blocked or closed. Please use Email & Password to sign in.')
       } else if (popupErr.code === 'auth/unauthorized-domain') {
         throw new Error('Please sign in with your email and password.')
       } else if (popupErr.code === 'auth/operation-not-allowed') {
         throw new Error('Google sign-in is currently unavailable. Please use Email & Password to sign in.')
+      } else if (popupErr.code === 'auth/argument-error') {
+        throw new Error('Please sign in with your email and password below.')
       }
-      throw popupErr
+      throw new Error(popupErr.message || 'Google sign-in failed. Please use Email & Password.')
     }
 
     if (!user) return null
