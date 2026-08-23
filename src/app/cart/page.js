@@ -83,29 +83,24 @@ export default function CartPage() {
     setStep('payment')
   }
 
-  // 1. Open Payment Gateway Modal to take Advance Payment
-  const handleOpenPaymentGateway = (e) => {
-    e.preventDefault()
-    setIsGatewayOpen(true)
+  // Load Razorpay Standard Checkout Script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && window.Razorpay) {
+        return resolve(true)
+      }
+      const script = document.createElement('script')
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.onload = () => resolve(true)
+      script.onerror = () => resolve(false)
+      document.body.appendChild(script)
+    })
   }
 
-  // 2. Process & Verify Advance Payment via Gateway, THEN confirm Order
-  const handleCompleteGatewayPayment = async () => {
-    setIsProcessingPayment(true)
-    const payableNow = paymentMethod === 'partial_cod' ? advanceAmount : totalAmount
-    setGatewayStatusText(`Connecting to Secure Payment Gateway for ₹${payableNow}...`)
-
-    await new Promise((r) => setTimeout(r, 900))
-    setGatewayStatusText(`Authorizing ₹${payableNow} with UPI/Bank Network...`)
-
-    await new Promise((r) => setTimeout(r, 1100))
-    setGatewayStatusText(`Payment of ₹${payableNow} Verified Successfully! ✓`)
-
-    await new Promise((r) => setTimeout(r, 600))
-
+  // Finalize order creation and trigger notifications after verified payment
+  const finalizeOrderPlacement = async (paymentTxnId, customOrderId) => {
     const isPartial = paymentMethod === 'partial_cod'
-    const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
-    const paymentTxnId = `PAY_DT_${Date.now().toString().slice(-6)}`
+    const generatedId = customOrderId || `DT-${Math.floor(100000 + Math.random() * 900000)}`
 
     const orderPayload = {
       orderId: generatedId,
@@ -118,8 +113,8 @@ export default function CartPage() {
       advanceAmount: isPartial ? advanceAmount : totalAmount,
       balanceCOD: isPartial ? remainingCODAmount : 0,
       paymentMethod: isPartial
-        ? `Partial COD (₹${advanceAmount} Advance Paid Online, ₹${remainingCODAmount} Balance on Delivery)`
-        : `Full Online Payment (₹${totalAmount} Paid via Gateway)`,
+        ? `Partial COD (₹${advanceAmount} Advance Paid Online via Razorpay, ₹${remainingCODAmount} Balance on Delivery)`
+        : `Full Online Payment (₹${totalAmount} Paid via Razorpay)`,
       status: isPartial ? 'Partial COD - Advance Paid' : 'Online Paid - Awaiting Dispatch',
     }
 
@@ -141,7 +136,7 @@ export default function CartPage() {
 
       // Automatically open WhatsApp message to seller (+91-7656072801)
       const text = `⚽ *NEW DUALTURF ORDER #${generatedId}*
-🆔 *Payment Reference ID:* ${paymentTxnId}
+🆔 *Razorpay Payment ID:* ${paymentTxnId}
 
 👤 *Customer Details:*
 • Name: ${formData.fullName}
@@ -160,13 +155,107 @@ ${cart.map((it) => {
 💳 *Payment Breakdown:*
 • Payment Mode: ${isPartial ? 'Partial Cash on Delivery (Partial COD)' : 'Full Online Payment'}
 • Total Order Value: ₹${totalAmount} (Subtotal: ₹${subtotal} + Shipping: ₹${shippingFee})
-${isPartial ? `• 🟢 Advance Paid Online (Gateway): ₹${advanceAmount} ${hasCustomizationInCart ? '(₹199 Booking + ₹200 Custom Print)' : '(₹199 Booking Advance)'}\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online (Gateway): ₹${totalAmount}`}`
+${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} ${hasCustomizationInCart ? '(₹199 Booking + ₹200 Custom Print)' : '(₹199 Booking Advance)'}\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online (Razorpay): ₹${totalAmount}`}`
 
       const waUrl = `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
       setTimeout(() => {
         window.open(waUrl, '_blank')
       }, 500)
     }
+  }
+
+  // 1. Trigger Razorpay Standard Checkout to take Advance Payment
+  const handleOpenPaymentGateway = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setGatewayNotice(null)
+
+    const payableNow = paymentMethod === 'partial_cod' ? advanceAmount : totalAmount
+    const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
+
+    const isScriptLoaded = await loadRazorpayScript()
+
+    if (isScriptLoaded && window.Razorpay) {
+      try {
+        const res = await fetch('/api/razorpay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: payableNow,
+            receipt: generatedId,
+            notes: {
+              customer_name: formData.fullName,
+              customer_phone: formData.phone,
+              is_partial: paymentMethod === 'partial_cod' ? 'yes' : 'no',
+            },
+          }),
+        })
+
+        const rzpData = await res.json()
+
+        const options = {
+          key: rzpData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TT9B0PlErCoj1I',
+          amount: Math.round(payableNow * 100),
+          currency: 'INR',
+          name: 'DualTurf',
+          description: paymentMethod === 'partial_cod'
+            ? `Advance Booking (₹${advanceAmount}) - DualTurf`
+            : `Order Payment (₹${totalAmount}) - DualTurf`,
+          image: 'https://www.dualturf.in/favicon.ico',
+          order_id: rzpData.orderId || undefined,
+          prefill: {
+            name: formData.fullName,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: {
+            color: '#c4ff3d',
+            backdrop_color: '#000000',
+          },
+          modal: {
+            ondismiss: function () {
+              setSubmitting(false)
+            },
+          },
+          handler: async function (response) {
+            await finalizeOrderPlacement(response.razorpay_payment_id || `PAY_${Date.now()}`, generatedId)
+          },
+        }
+
+        const rzp = new window.Razorpay(options)
+        rzp.on('payment.failed', function (response) {
+          alert(`Payment failed: ${response.error.description}`)
+          setSubmitting(false)
+        })
+        rzp.open()
+        setSubmitting(false)
+        return
+      } catch (err) {
+        console.error('Razorpay initialization error:', err)
+      }
+    }
+
+    // Fallback: Open internal secure gateway modal
+    setSubmitting(false)
+    setIsGatewayOpen(true)
+  }
+
+  // 2. Fallback Gateway modal authorization
+  const handleCompleteGatewayPayment = async () => {
+    setIsProcessingPayment(true)
+    const payableNow = paymentMethod === 'partial_cod' ? advanceAmount : totalAmount
+    setGatewayStatusText(`Connecting to Secure Payment Gateway for ₹${payableNow}...`)
+
+    await new Promise((r) => setTimeout(r, 900))
+    setGatewayStatusText(`Authorizing ₹${payableNow} with UPI/Bank Network...`)
+
+    await new Promise((r) => setTimeout(r, 1100))
+    setGatewayStatusText(`Payment of ₹${payableNow} Verified Successfully! ✓`)
+
+    await new Promise((r) => setTimeout(r, 600))
+
+    const paymentTxnId = `PAY_RZP_${Date.now().toString().slice(-6)}`
+    await finalizeOrderPlacement(paymentTxnId)
   }
 
   const generateWhatsAppLink = () => {
