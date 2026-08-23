@@ -222,24 +222,29 @@ export default function Header() {
               ) : (
                 <div className={styles.cartList}>
                   {cart.map((item, idx) => (
-                    <div key={`${item.id}-${item.size}-${idx}`} className={styles.cartRow}>
+                    <div key={`${item.id}-${item.size}-${item.customName || ''}-${item.customNumber || ''}-${idx}`} className={styles.cartRow}>
                       <img src={item.image} alt={item.title} className={styles.cartItemImg} />
                       <div className={styles.cartItemDetails}>
                         <h4 className={styles.cartItemTitle}>{item.title}</h4>
                         <p className={styles.cartItemMeta}>Size: {item.size}</p>
+                        {(item.customName || item.customNumber) && (
+                          <p style={{ fontSize: '0.75rem', color: '#c4ff3d', fontWeight: '700', marginTop: '0.2rem' }}>
+                            ⚡ Print: {item.customName || ''} {item.customNumber ? `#${item.customNumber}` : ''}
+                          </p>
+                        )}
                         <p className={styles.cartItemPrice}>₹{item.price}</p>
 
                         <div className={styles.qtyRow}>
                           <button
                             className={styles.qtyBtn}
-                            onClick={() => updateQuantity(item.id, item.size, -1)}
+                            onClick={() => updateQuantity(item.id, item.size, -1, item.customName, item.customNumber)}
                           >
                             -
                           </button>
                           <span className={styles.qtyNum}>{item.quantity}</span>
                           <button
                             className={styles.qtyBtn}
-                            onClick={() => updateQuantity(item.id, item.size, 1)}
+                            onClick={() => updateQuantity(item.id, item.size, 1, item.customName, item.customNumber)}
                           >
                             +
                           </button>
@@ -248,7 +253,7 @@ export default function Header() {
 
                       <button
                         className={styles.removeBtn}
-                        onClick={() => removeFromCart(item.id, item.size)}
+                        onClick={() => removeFromCart(item.id, item.size, item.customName, item.customNumber)}
                         title="Remove"
                       >
                         🗑️

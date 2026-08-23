@@ -51,14 +51,17 @@ async function sendOrderEmail(order) {
     },
   });
 
-  const itemsHtml = (order.items || []).map(item =>
-    `<tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #333;">${item.title}</td>
+  const itemsHtml = (order.items || []).map(item => {
+    const printBadge = (item.customName || item.customNumber)
+      ? `<br/><span style="color:#c4ff3d;font-size:12px;font-weight:bold;">⚡ Print: ${item.customName || ''} ${item.customNumber ? '#' + item.customNumber : ''}</span>`
+      : '';
+    return `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #333;">${item.title}${printBadge}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:center;">${item.size}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:center;">${item.quantity}</td>
       <td style="padding:8px 12px;border-bottom:1px solid #333;text-align:right;">₹${item.price * item.quantity}</td>
-    </tr>`
-  ).join('');
+    </tr>`;
+  }).join('');
 
   const htmlBody = `
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#ffffff;border-radius:12px;overflow:hidden;">

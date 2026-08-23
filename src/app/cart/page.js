@@ -124,7 +124,10 @@ export default function CartPage() {
 ${formData.address}, ${formData.city}, ${formData.state} - ${formData.pincode}
 
 🛍️ *Items Ordered:*
-${cart.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
+${cart.map((it) => {
+  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''}]` : ''
+  return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
+}).join('\n')}
 
 💳 *Payment Summary:*
 • Payment Mode: Cash on Delivery (COD)
@@ -152,7 +155,10 @@ ${cart.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.
 ${placedOrder.customer.address}, ${placedOrder.customer.city}, ${placedOrder.customer.state} - ${placedOrder.customer.pincode}
 
 🛍️ *Items Ordered:*
-${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
+${placedOrder.items.map((it) => {
+  const customStr = (it.customName || it.customNumber) ? ` [Print: ${it.customName || ''} ${it.customNumber ? '#' + it.customNumber : ''}]` : ''
+  return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
+}).join('\n')}
 
 💳 *Payment Summary:*
 • Payment Mode: ${placedOrder.paymentMethod}
@@ -209,18 +215,23 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
             <div className={styles.cartLayout}>
               <div className={styles.itemList}>
                 {cart.map((item, idx) => (
-                  <div key={`${item.id}-${item.size}-${idx}`} className={styles.itemRow}>
+                  <div key={`${item.id}-${item.size}-${item.customName || ''}-${item.customNumber || ''}-${idx}`} className={styles.itemRow}>
                     <img src={item.image} alt={item.title} className={styles.itemImg} />
                     <div className={styles.itemInfo}>
                       <h3 className={styles.itemTitle}>{item.title}</h3>
                       <p className={styles.itemSize}>Size: <strong>{item.size}</strong></p>
+                      {(item.customName || item.customNumber) && (
+                        <p style={{ fontSize: '0.8125rem', color: '#c4ff3d', fontWeight: '700', marginTop: '0.25rem' }}>
+                          ⚡ Player Print: {item.customName || ''} {item.customNumber ? `#${item.customNumber}` : ''}
+                        </p>
+                      )}
                       <p className={styles.itemPrice}>₹{item.price}</p>
                     </div>
 
                     <div className={styles.qtyControl}>
-                      <button onClick={() => updateQuantity(item.id, item.size, -1)}>-</button>
+                      <button onClick={() => updateQuantity(item.id, item.size, -1, item.customName, item.customNumber)}>-</button>
                       <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.size, 1)}>+</button>
+                      <button onClick={() => updateQuantity(item.id, item.size, 1, item.customName, item.customNumber)}>+</button>
                     </div>
 
                     <div className={styles.lineTotal}>
@@ -229,7 +240,7 @@ ${placedOrder.items.map((it) => `- ${it.title} (Size: ${it.size}) x ${it.quantit
 
                     <button
                       className={styles.removeBtn}
-                      onClick={() => removeFromCart(item.id, item.size)}
+                      onClick={() => removeFromCart(item.id, item.size, item.customName, item.customNumber)}
                       title="Remove item"
                     >
                       ✕

@@ -313,3 +313,87 @@
   font-weight: 700;
   color: var(--accent-color);
 }
+
+/* Jersey Customization Section */
+.customizationSection {
+  background-color: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.customizationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.customizationTitle {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--accent-color);
+}
+
+.customNoticeBox {
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #ff8787;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.customInputRow {
+  display: flex;
+  gap: 0.875rem;
+}
+
+.customInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.customInputGroup label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #aaaaaa;
+  letter-spacing: 0.05em;
+}
+
+.customInput {
+  background-color: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  outline: none;
+  transition: var(--transition-smooth);
+  text-transform: uppercase;
+}
+
+.customInput:focus {
+  border-color: var(--accent-color);
+  background-color: #222222;
+}
+
+.customInput::placeholder {
+  color: #555555;
+  font-weight: 400;
+  text-transform: none;
+}
+
+@media (max-width: 600px) {
+  .customInputRow {
+    flex-direction: column;
+  }
+}

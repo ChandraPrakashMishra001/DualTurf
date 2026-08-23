@@ -11,6 +11,8 @@ export default function ProductClient({ product, relatedProducts, category }) {
   const [selectedSize, setSelectedSize] = useState(
     product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'M'
   );
+  const [customName, setCustomName] = useState('');
+  const [customNumber, setCustomNumber] = useState('');
   const [openAccordion, setOpenAccordion] = useState('shipping');
   const [toastMsg, setToastMsg] = useState(null);
 
@@ -19,8 +21,21 @@ export default function ProductClient({ product, relatedProducts, category }) {
   };
 
   const handleAddToCart = () => {
-    addToCart(product, selectedSize, 1);
-    setToastMsg(`Added ${product.title || product.name} (Size: ${selectedSize}) to bag!`);
+    const customization = {
+      customName: customName.trim().toUpperCase(),
+      customNumber: customNumber.trim(),
+    };
+    addToCart(product, selectedSize, 1, customization);
+    
+    let toast = `Added ${product.title || product.name} (Size: ${selectedSize}) to bag!`;
+    if (customization.customName || customization.customNumber) {
+      const printInfo = [
+        customization.customName,
+        customization.customNumber ? `#${customization.customNumber}` : ''
+      ].filter(Boolean).join(' ');
+      toast = `Added ${product.title || product.name} (${selectedSize} • ${printInfo}) to bag!`;
+    }
+    setToastMsg(toast);
     setTimeout(() => setToastMsg(null), 3000);
   };
 
@@ -102,7 +117,44 @@ export default function ProductClient({ product, relatedProducts, category }) {
             </div>
           </div>
 
-          <button className="btn-primary" style={{ width: '100%', height: '52px', marginTop: '1rem' }} onClick={handleAddToCart}>
+          {/* Jersey Customization / Player Print */}
+          <div className={styles.customizationSection}>
+            <div className={styles.customizationHeader}>
+              <span className={styles.customizationTitle}>⚡ CUSTOMIZE JERSEY PRINT (OPTIONAL)</span>
+            </div>
+
+            <div className={styles.customNoticeBox}>
+              <span>⚠️ Note: Only official football player names are accepted. Any custom or random names will result in order cancellation and a full refund.</span>
+            </div>
+
+            <div className={styles.customInputRow}>
+              <div className={styles.customInputGroup}>
+                <label>PLAYER NAME</label>
+                <input
+                  type="text"
+                  placeholder="e.g. BELLINGHAM, MESSI, RONALDO"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value.toUpperCase())}
+                  maxLength={25}
+                  className={styles.customInput}
+                />
+              </div>
+
+              <div className={styles.customInputGroup} style={{ maxWidth: '130px' }}>
+                <label>NUMBER</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 5, 7, 10"
+                  value={customNumber}
+                  onChange={(e) => setCustomNumber(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                  maxLength={3}
+                  className={styles.customInput}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button className="btn-primary" style={{ width: '100%', height: '52px', marginTop: '0.5rem' }} onClick={handleAddToCart}>
             ADD TO BAG
           </button>
 

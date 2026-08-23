@@ -29,10 +29,17 @@ export function CartProvider({ children }) {
     }
   }, [cart])
 
-  const addToCart = (product, size = 'M', quantity = 1) => {
+  const addToCart = (product, size = 'M', quantity = 1, customization = {}) => {
+    const cName = (customization.customName || '').trim().toUpperCase()
+    const cNum = (customization.customNumber || '').trim()
+
     setCart((prevCart) => {
       const existingIndex = prevCart.findIndex(
-        (item) => item.id === product.id && item.size === size
+        (item) =>
+          item.id === product.id &&
+          item.size === size &&
+          (item.customName || '') === cName &&
+          (item.customNumber || '') === cNum
       )
 
       if (existingIndex > -1) {
@@ -49,6 +56,8 @@ export function CartProvider({ children }) {
             price: product.price,
             image: product.image,
             size: size,
+            customName: cName,
+            customNumber: cNum,
             quantity: quantity,
           },
         ]
@@ -59,15 +68,34 @@ export function CartProvider({ children }) {
     setIsCartOpen(true)
   }
 
-  const removeFromCart = (id, size) => {
-    setCart((prev) => prev.filter((item) => !(item.id === id && item.size === size)))
+  const removeFromCart = (id, size, customName = '', customNumber = '') => {
+    const cName = (customName || '').trim().toUpperCase()
+    const cNum = (customNumber || '').trim()
+    setCart((prev) =>
+      prev.filter(
+        (item) =>
+          !(
+            item.id === id &&
+            item.size === size &&
+            (item.customName || '') === cName &&
+            (item.customNumber || '') === cNum
+          )
+      )
+    )
   }
 
-  const updateQuantity = (id, size, delta) => {
+  const updateQuantity = (id, size, delta, customName = '', customNumber = '') => {
+    const cName = (customName || '').trim().toUpperCase()
+    const cNum = (customNumber || '').trim()
     setCart((prev) =>
       prev
         .map((item) => {
-          if (item.id === id && item.size === size) {
+          if (
+            item.id === id &&
+            item.size === size &&
+            (item.customName || '') === cName &&
+            (item.customNumber || '') === cNum
+          ) {
             const newQty = item.quantity + delta
             return newQty > 0 ? { ...item, quantity: newQty } : null
           }
