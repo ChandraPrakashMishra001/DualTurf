@@ -10,12 +10,17 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, subtotal, clearCart } = useCart()
   const { currentUser, userProfile } = useAuth()
 
-  // Payment method selection: 'gateway' | 'cod'
-  const [paymentMethod, setPaymentMethod] = useState('gateway')
+  // Payment method selection: 'partial_cod' | 'full_online'
+  const [paymentMethod, setPaymentMethod] = useState('partial_cod')
 
   // Shipping Fee configuration
   const shippingFee = cart.length > 0 ? 80 : 0
   const totalAmount = subtotal + shippingFee
+
+  // Partial COD Calculations (₹199 Advance standard, or ₹399 if jersey customization is added)
+  const hasCustomizationInCart = cart.some((it) => Boolean(it.customName || it.customNumber))
+  const advanceAmount = hasCustomizationInCart ? 399 : 199
+  const remainingCODAmount = Math.max(0, totalAmount - advanceAmount)
 
   // Checkout step state: 'cart' | 'address' | 'payment' | 'confirmed'
   const [step, setStep] = useState('cart')
@@ -75,16 +80,7 @@ export default function CartPage() {
     setSubmitting(true)
     setGatewayNotice(null)
 
-    // Check if Razorpay / Payment Gateway script or API key is active
-    if (paymentMethod === 'gateway') {
-      setTimeout(() => {
-        setGatewayNotice('⚠️ Online Payment Gateway Integration: Please connect your Razorpay or PhonePe API credentials to process live instant card/UPI payments.')
-        setSubmitting(false)
-      }, 800)
-      return
-    }
-
-    // COD Order Flow
+    const isPartial = paymentMethod === 'partial_cod'
     const generatedId = `DT-${Math.floor(100000 + Math.random() * 900000)}`
     const orderPayload = {
       orderId: generatedId,
@@ -93,8 +89,12 @@ export default function CartPage() {
       subtotal,
       shippingFee,
       totalAmount,
-      paymentMethod: 'Cash on Delivery (COD)',
-      status: 'COD Order - Awaiting Dispatch',
+      advanceAmount: isPartial ? advanceAmount : totalAmount,
+      balanceCOD: isPartial ? remainingCODAmount : 0,
+      paymentMethod: isPartial
+        ? `Partial COD (₹${advanceAmount} Advance Online + ₹${remainingCODAmount} Balance on Delivery)`
+        : `Full Online Payment (₹${totalAmount})`,
+      status: isPartial ? 'Partial COD - Advance Verification' : 'Online Paid - Awaiting Dispatch',
     }
 
     try {
@@ -129,11 +129,10 @@ ${cart.map((it) => {
   return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
 }).join('\n')}
 
-💳 *Payment Summary:*
-• Payment Mode: Cash on Delivery (COD)
-• Subtotal: ₹${subtotal}
-• Shipping Fee: ₹${shippingFee}
-• Total Amount to Collect: ₹${totalAmount}`
+💳 *Payment Breakdown:*
+• Payment Mode: ${isPartial ? 'Partial Cash on Delivery (Partial COD)' : 'Full Online Payment'}
+• Total Order Value: ₹${totalAmount} (Subtotal: ₹${subtotal} + Shipping: ₹${shippingFee})
+${isPartial ? `• 🟢 Advance Online Payment: ₹${advanceAmount} ${hasCustomizationInCart ? '(₹199 Booking + ₹200 Custom Print)' : '(₹199 Booking Advance)'}\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online: ₹${totalAmount}`}`
 
       const waUrl = `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
       setTimeout(() => {
@@ -144,6 +143,7 @@ ${cart.map((it) => {
 
   const generateWhatsAppLink = () => {
     if (!placedOrder) return '#'
+    const isPartial = (placedOrder.balanceCOD || 0) > 0
     const text = `⚽ *NEW DUALTURF ORDER #${placedOrder.orderId}*
 
 👤 *Customer Details:*
@@ -160,11 +160,10 @@ ${placedOrder.items.map((it) => {
   return `- ${it.title} (Size: ${it.size}${customStr}) x ${it.quantity} = ₹${it.price * it.quantity}`
 }).join('\n')}
 
-💳 *Payment Summary:*
+💳 *Payment Breakdown:*
 • Payment Mode: ${placedOrder.paymentMethod}
-• Subtotal: ₹${placedOrder.subtotal}
-• Shipping Fee: ₹${placedOrder.shippingFee || 80}
-• Total Amount: ₹${placedOrder.totalAmount}`
+• Total Order Value: ₹${placedOrder.totalAmount} (Subtotal: ₹${placedOrder.subtotal} + Shipping: ₹${placedOrder.shippingFee || 80})
+${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\n• 💵 Balance to Collect on Delivery (COD): ₹${placedOrder.balanceCOD}` : `• 🟢 Total Paid Online: ₹${placedOrder.totalAmount}`}`
 
     return `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
   }
@@ -418,56 +417,67 @@ ${placedOrder.items.map((it) => {
         </div>
       )}
 
-      {/* STEP 3: PAYMENT GATEWAY INTERFACE */}
+      {/* STEP 3: PAYMENT METHOD */}
       {step === 'payment' && (
         <div className={styles.upiContainer}>
           <h1 className="font-display title-underline" style={{ fontSize: '3rem', marginBottom: '1.5rem', textAlign: 'center' }}>
             PAYMENT METHOD
           </h1>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
+          {/* Payment Method Switcher */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', maxWidth: '650px', margin: '0 auto 2rem auto' }}>
             <button
               type="button"
-              onClick={() => setPaymentMethod('gateway')}
+              onClick={() => setPaymentMethod('partial_cod')}
               style={{
-                backgroundColor: paymentMethod === 'gateway' ? 'var(--accent-color)' : '#111111',
-                color: paymentMethod === 'gateway' ? '#000000' : '#ffffff',
-                border: paymentMethod === 'gateway' ? '2px solid var(--accent-color)' : '1px solid #333333',
-                padding: '1.25rem 1rem',
-                borderRadius: '8px',
+                backgroundColor: paymentMethod === 'partial_cod' ? '#141414' : '#0d0d0d',
+                color: '#ffffff',
+                border: paymentMethod === 'partial_cod' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
+                padding: '1.25rem 1.1rem',
+                borderRadius: '10px',
                 fontWeight: '700',
                 fontSize: '1rem',
                 cursor: 'pointer',
-                textAlign: 'center',
+                textAlign: 'left',
+                position: 'relative',
                 transition: 'all 0.2s ease',
               }}
             >
-              🔒 Online Payment Gateway
-              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Razorpay / PhonePe / Cards / UPI</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <span style={{ color: paymentMethod === 'partial_cod' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>⚡ Partial COD</span>
+                <span style={{ fontSize: '0.7rem', backgroundColor: '#c4ff3d', color: '#000', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>RECOMMENDED</span>
+              </div>
+              <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
+                Pay <strong>₹{advanceAmount} advance online</strong> now, and remaining <strong>₹{remainingCODAmount}</strong> on delivery.
+              </p>
             </button>
 
             <button
               type="button"
-              onClick={() => setPaymentMethod('cod')}
+              onClick={() => setPaymentMethod('full_online')}
               style={{
-                backgroundColor: paymentMethod === 'cod' ? 'var(--accent-color)' : '#111111',
-                color: paymentMethod === 'cod' ? '#000000' : '#ffffff',
-                border: paymentMethod === 'cod' ? '2px solid var(--accent-color)' : '1px solid #333333',
-                padding: '1.25rem 1rem',
-                borderRadius: '8px',
+                backgroundColor: paymentMethod === 'full_online' ? '#141414' : '#0d0d0d',
+                color: '#ffffff',
+                border: paymentMethod === 'full_online' ? '2px solid #c4ff3d' : '1px solid #2a2a2a',
+                padding: '1.25rem 1.1rem',
+                borderRadius: '10px',
                 fontWeight: '700',
                 fontSize: '1rem',
                 cursor: 'pointer',
-                textAlign: 'center',
+                textAlign: 'left',
                 transition: 'all 0.2s ease',
               }}
             >
-              💵 Cash on Delivery
-              <span style={{ display: 'block', fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Pay Cash Upon Arrival</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <span style={{ color: paymentMethod === 'full_online' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>🔒 Full Online Payment</span>
+              </div>
+              <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
+                Pay 100% <strong>₹{totalAmount}</strong> online via UPI, Cards, or NetBanking.
+              </p>
             </button>
           </div>
 
-          <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
+          <div className={styles.upiBox} style={{ gridTemplateColumns: '1fr', maxWidth: '650px', margin: '0 auto' }}>
             <div className={styles.upiDetails}>
               <div className={styles.detailRow}>
                 <span>Subtotal:</span>
@@ -478,15 +488,51 @@ ${placedOrder.items.map((it) => {
                 <strong>₹{shippingFee}</strong>
               </div>
               <div className={styles.detailRow}>
-                <span>Total Payable Amount:</span>
-                <strong style={{ color: 'var(--accent-color)', fontSize: '1.25rem' }}>₹{totalAmount}</strong>
+                <span>Total Order Value:</span>
+                <strong style={{ fontSize: '1.15rem' }}>₹{totalAmount}</strong>
               </div>
 
-              <hr className={styles.divider} />
-
-              {gatewayNotice && (
-                <div style={{ backgroundColor: 'rgba(255, 184, 0, 0.15)', border: '1px solid #FFB800', color: '#FFD700', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  {gatewayNotice}
+              {/* Partial COD Breakdown Card */}
+              {paymentMethod === 'partial_cod' ? (
+                <div style={{
+                  margin: '1.25rem 0',
+                  padding: '1.25rem',
+                  backgroundColor: '#161616',
+                  border: '1px solid rgba(196, 255, 61, 0.35)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.65rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c4ff3d', fontWeight: '800', fontSize: '1.1rem' }}>
+                    <span>⚡ Advance Payable Online Now:</span>
+                    <span>₹{advanceAmount}</span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#aaaaaa', margin: 0 }}>
+                    {hasCustomizationInCart
+                      ? '• Includes ₹199 order booking advance + ₹200 jersey customization fee.'
+                      : '• Includes ₹199 order confirmation & booking advance.'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ffffff', fontWeight: '700', fontSize: '0.95rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.6rem' }}>
+                    <span>💵 Remaining Balance to Collect on Delivery (COD):</span>
+                    <span style={{ color: '#fff', fontSize: '1.05rem' }}>₹{remainingCODAmount}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  margin: '1.25rem 0',
+                  padding: '1.25rem',
+                  backgroundColor: '#161616',
+                  border: '1px solid rgba(196, 255, 61, 0.35)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  color: '#c4ff3d',
+                  fontWeight: '800',
+                  fontSize: '1.1rem'
+                }}>
+                  <span>Total Amount Payable Online:</span>
+                  <span>₹{totalAmount}</span>
                 </div>
               )}
 
@@ -496,7 +542,11 @@ ${placedOrder.items.map((it) => {
                     ← Edit Address
                   </button>
                   <button type="submit" className="btn-primary" disabled={submitting}>
-                    {submitting ? 'PROCESSING ORDER...' : paymentMethod === 'gateway' ? `PAY ₹${totalAmount} VIA GATEWAY →` : 'PLACE COD ORDER →'}
+                    {submitting
+                      ? 'PROCESSING ORDER...'
+                      : paymentMethod === 'partial_cod'
+                      ? `PAY ₹${advanceAmount} ADVANCE & CONFIRM →`
+                      : `PAY ₹${totalAmount} ONLINE & CONFIRM →`}
                   </button>
                 </div>
               </form>
@@ -521,17 +571,22 @@ ${placedOrder.items.map((it) => {
               ✓ Notification Sent to Seller
             </h3>
             <p style={{ fontSize: '0.925rem', color: 'rgba(255,255,255,0.9)', margin: '0.4rem 0' }}>
-              Your order notification has been sent automatically to DualTurf store management (+91-7656072801).
+              Your order details have been recorded and sent to DualTurf management (+91-7656072801).
             </p>
           </div>
 
           <div className={styles.confirmedDetails}>
-            <h3>Shipping & Order Details:</h3>
+            <h3>Payment & Delivery Summary:</h3>
             <p><strong>{placedOrder.customer.fullName}</strong> ({placedOrder.customer.phone})</p>
             <p>{placedOrder.customer.address}, {placedOrder.customer.city}, {placedOrder.customer.state} - {placedOrder.customer.pincode}</p>
-            <p style={{ marginTop: '0.75rem' }}>
-              Payment Method: <strong>{placedOrder.paymentMethod}</strong> • Total Amount: <strong>₹{placedOrder.totalAmount}</strong>
-            </p>
+            
+            <div style={{ marginTop: '1rem', padding: '0.875rem', backgroundColor: '#161616', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <p>• Total Order Value: <strong>₹{placedOrder.totalAmount}</strong></p>
+              <p style={{ color: '#c4ff3d' }}>• Advance Online Payment: <strong>₹{placedOrder.advanceAmount}</strong></p>
+              {placedOrder.balanceCOD > 0 && (
+                <p style={{ color: '#ffffff' }}>• Balance to Pay on Delivery (COD): <strong>₹{placedOrder.balanceCOD}</strong></p>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column', marginTop: '2rem' }}>

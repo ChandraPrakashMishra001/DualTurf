@@ -118,10 +118,22 @@ async function sendOrderEmail(order) {
               <td style="padding:4px 0;">Shipping:</td>
               <td style="padding:4px 0;text-align:right;">₹${order.shippingFee || 80}</td>
             </tr>
-            <tr style="border-top:2px solid #c4ff3d;">
-              <td style="padding:12px 0 4px;font-weight:700;font-size:17px;">Total Amount:</td>
-              <td style="padding:12px 0 4px;text-align:right;font-weight:700;font-size:17px;color:#c4ff3d;">₹${order.totalAmount || 0}</td>
+            <tr style="border-top:1px solid #333;">
+              <td style="padding:6px 0;font-weight:700;">Total Order Value:</td>
+              <td style="padding:6px 0;text-align:right;font-weight:700;color:#c4ff3d;">₹${order.totalAmount || 0}</td>
             </tr>
+            ${order.advanceAmount ? `
+            <tr style="color:#c4ff3d;">
+              <td style="padding:4px 0;font-weight:600;">⚡ Advance Paid Online:</td>
+              <td style="padding:4px 0;text-align:right;font-weight:600;">₹${order.advanceAmount}</td>
+            </tr>
+            ` : ''}
+            ${(order.balanceCOD !== undefined && order.balanceCOD > 0) ? `
+            <tr style="color:#ffffff;">
+              <td style="padding:4px 0;font-weight:600;">💵 Balance to Collect (COD):</td>
+              <td style="padding:4px 0;text-align:right;font-weight:600;">₹${order.balanceCOD}</td>
+            </tr>
+            ` : ''}
           </table>
         </div>
 

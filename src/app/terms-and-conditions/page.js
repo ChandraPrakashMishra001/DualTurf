@@ -68,8 +68,12 @@ export default function TermsAndConditions() {
           </section>
 
           <section>
-            <h2 style={{ color: '#fff', marginBottom: '0.75rem', fontSize: '1.35rem' }}>6. Pricing, Payments & Delivery</h2>
-            <p>All prices listed on DualTurf are in Indian Rupees (INR). We offer standard delivery across India (5-7 business days). While we partner with reliable courier services, DualTurf is not liable for external delays caused by weather, festive seasons, or regional restrictions.</p>
+            <h2 style={{ color: '#fff', marginBottom: '0.75rem', fontSize: '1.35rem' }}>6. Pricing, Payments & Partial COD Policy</h2>
+            <p>All prices listed on DualTurf are in Indian Rupees (INR). We operate on a <strong>Partial Cash on Delivery (Partial COD)</strong> and Full Online Payment model. Pure zero-advance COD is not offered.</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <li><strong>Standard Orders:</strong> We require a nominal advance payment of ₹199 online to confirm the booking and initiate dispatch. The remaining balance is collected in cash/UPI upon delivery.</li>
+              <li><strong>Customized Jersey Orders:</strong> Customized kits require an advance payment of ₹399 online (₹199 booking advance + ₹200 custom printing fee). The remaining balance is collected upon delivery. Delivery timeline is extended by 3–5 business days for precision player printing.</li>
+            </ul>
           </section>
 
           <section>
