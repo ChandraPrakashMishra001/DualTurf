@@ -240,7 +240,11 @@ function LoginForm() {
             <input 
               type="email" 
               name="email" 
-              placeholder="Email" 
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              placeholder="Email address" 
               className={styles.input} 
               required 
               value={formData.email}
@@ -251,6 +255,9 @@ function LoginForm() {
             <input 
               type="password" 
               name="password" 
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="current-password"
               placeholder="Password" 
               className={styles.input} 
               required 
@@ -265,7 +272,9 @@ function LoginForm() {
         </form>
         
         <div className={styles.links}>
-          <Link href="/account/register" className={styles.link}>Create account</Link>
+          <Link href={`/account/register${redirectUrl ? `?redirect=${encodeURIComponent(redirectUrl)}` : ''}`} className={styles.link}>
+            Don't have an account? <strong>Create Account →</strong>
+          </Link>
         </div>
       </div>
     </div>

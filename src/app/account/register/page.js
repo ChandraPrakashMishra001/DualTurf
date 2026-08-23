@@ -117,6 +117,7 @@ function RegisterForm() {
               type="text" 
               name="firstName" 
               placeholder="First Name" 
+              autoCapitalize="words"
               className={styles.input} 
               required 
               value={formData.firstName}
@@ -128,6 +129,7 @@ function RegisterForm() {
               type="text" 
               name="lastName" 
               placeholder="Last Name" 
+              autoCapitalize="words"
               className={styles.input} 
               required 
               value={formData.lastName}
@@ -138,7 +140,11 @@ function RegisterForm() {
             <input 
               type="email" 
               name="email" 
-              placeholder="Email" 
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              placeholder="Email address" 
               className={styles.input} 
               required 
               value={formData.email}
@@ -149,6 +155,9 @@ function RegisterForm() {
             <input 
               type="password" 
               name="password" 
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="new-password"
               placeholder="Password (min 6 characters)" 
               className={styles.input} 
               required 

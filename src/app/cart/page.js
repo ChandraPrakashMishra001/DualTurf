@@ -98,7 +98,8 @@ export default function CartPage() {
     try {
       await loginWithGoogle()
     } catch (err) {
-      console.error('Google quick sign-in error:', err)
+      console.warn('Google quick sign-in fallback on mobile:', err)
+      window.location.href = '/account/login?redirect=/cart'
     }
   }
 

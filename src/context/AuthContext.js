@@ -10,6 +10,8 @@ import {
   sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
@@ -22,7 +24,7 @@ export function AuthProvider({ children }) {
   const [userOrders, setUserOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Load saved session on init
+  // Load saved session on init & handle mobile redirect result
   useEffect(() => {
     try {
       const localCurrent = localStorage.getItem('dualturf_current_user')
@@ -30,28 +32,56 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(localCurrent)
         setCurrentUser(parsed)
         setUserProfile(parsed)
-        setLoading(false) // Immediately unblock UI if local session exists
+        setLoading(false)
       }
     } catch (e) {
       console.warn('LocalStorage session read error:', e)
     }
 
+    // Check for Google redirect result (for mobile phones)
+    try {
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result && result.user) {
+            const user = result.user
+            const profileData = {
+              uid: user.uid,
+              name: user.displayName || user.email,
+              email: user.email,
+              emailVerified: true,
+              photoURL: user.photoURL,
+              createdAt: new Date().toISOString(),
+            }
+            try {
+              localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
+            } catch (err) {}
+            setCurrentUser(profileData)
+            setUserProfile(profileData)
+          }
+        })
+        .catch((err) => {
+          console.warn('Redirect auth notice:', err)
+        })
+    } catch (err) {}
+
     try {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
-          setCurrentUser(user)
+          const sessionUser = {
+            uid: user.uid,
+            name: user.displayName || user.email,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            photoURL: user.photoURL,
+          }
+          setCurrentUser(sessionUser)
           try {
             const userDocRef = doc(db, 'users', user.uid)
             const userSnap = await getDoc(userDocRef)
             if (userSnap.exists()) {
               setUserProfile(userSnap.data())
             } else {
-              setUserProfile({
-                uid: user.uid,
-                name: user.displayName || user.email,
-                email: user.email,
-                emailVerified: user.emailVerified,
-              })
+              setUserProfile(sessionUser)
             }
             fetchUserOrders(user.uid)
           } catch (e) {
@@ -82,27 +112,37 @@ export function AuthProvider({ children }) {
   }
 
   const register = async (firstName, lastName, email, password) => {
-    const fullName = `${firstName} ${lastName}`
+    const cleanFirstName = (firstName || '').trim()
+    const cleanLastName = (lastName || '').trim()
+    const cleanEmail = (email || '').trim().toLowerCase()
+    const cleanPassword = (password || '').trim()
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      throw new Error('Please enter a valid email address.')
+    }
+    if (!cleanPassword || cleanPassword.length < 6) {
+      throw new Error('Password should be at least 6 characters long.')
+    }
+
+    const fullName = `${cleanFirstName} ${cleanLastName}`.trim() || cleanEmail.split('@')[0]
     const profileData = {
       uid: `user_${Date.now()}`,
-      firstName,
-      lastName,
+      firstName: cleanFirstName,
+      lastName: cleanLastName,
       name: fullName,
-      email: email.toLowerCase(),
+      email: cleanEmail,
       emailVerified: false,
       createdAt: new Date().toISOString(),
     }
 
     let user = null
     try {
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      const credential = await createUserWithEmailAndPassword(auth, cleanEmail, cleanPassword)
       user = credential.user
       await updateProfile(user, { displayName: fullName })
       try {
         await sendEmailVerification(user)
-      } catch (e) {
-        console.warn('Email verification send notice:', e.message)
-      }
+      } catch (e) {}
       profileData.uid = user.uid
       profileData.emailVerified = user.emailVerified
       try {
@@ -116,18 +156,18 @@ export function AuthProvider({ children }) {
       } else if (e.code === 'auth/invalid-email') {
         throw new Error('Please enter a valid email address.')
       }
-      console.warn('Firebase Auth register warning (using fallback session):', e.message)
+      console.warn('Firebase Auth register notice (using local session fallback):', e.message)
     }
 
-    // Save session locally
+    // Save session locally with maximum safety
     try {
       localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
       const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
-      const existingIdx = savedUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase())
+      const existingIdx = savedUsers.findIndex((u) => u.email.toLowerCase() === cleanEmail)
       if (existingIdx > -1) {
-        savedUsers[existingIdx] = { ...profileData, password }
+        savedUsers[existingIdx] = { ...profileData, password: cleanPassword }
       } else {
-        savedUsers.push({ ...profileData, password })
+        savedUsers.push({ ...profileData, password: cleanPassword })
       }
       localStorage.setItem('dualturf_users', JSON.stringify(savedUsers))
     } catch (err) {}
@@ -146,9 +186,19 @@ export function AuthProvider({ children }) {
   }
 
   const login = async (email, password) => {
+    const cleanEmail = (email || '').trim().toLowerCase()
+    const cleanPassword = (password || '').trim()
+
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      throw new Error('Please enter a valid email address.')
+    }
+    if (!cleanPassword) {
+      throw new Error('Please enter your password.')
+    }
+
     let user = null
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password)
+      const credential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword)
       user = credential.user
     } catch (e) {
       console.warn('Firebase Auth login notice:', e.message)
@@ -157,7 +207,9 @@ export function AuthProvider({ children }) {
     if (!user) {
       try {
         const savedUsers = JSON.parse(localStorage.getItem('dualturf_users') || '[]')
-        const found = savedUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password)
+        const found = savedUsers.find(
+          (u) => u.email.toLowerCase() === cleanEmail && u.password === cleanPassword
+        )
         if (found) {
           user = found
         }
@@ -170,8 +222,8 @@ export function AuthProvider({ children }) {
 
     const sessionObj = {
       uid: user.uid || user.id || `user_${Date.now()}`,
-      name: user.name || user.displayName || user.email,
-      email: user.email,
+      name: user.name || user.displayName || user.email.split('@')[0],
+      email: cleanEmail,
       emailVerified: user.emailVerified || false,
       createdAt: user.createdAt || new Date().toISOString(),
     }
@@ -187,14 +239,47 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth, provider)
-    const user = result.user
+    provider.setCustomParameters({ prompt: 'select_account' })
+
+    let user = null
+    try {
+      const result = await signInWithPopup(auth, provider)
+      user = result.user
+    } catch (popupErr) {
+      console.warn('Popup sign in failed on phone browser:', popupErr.code, popupErr.message)
+      
+      // On mobile browsers where popups are blocked by default:
+      if (
+        popupErr.code === 'auth/popup-blocked' ||
+        popupErr.code === 'auth/cancelled-popup-request' ||
+        popupErr.code === 'auth/popup-closed-by-user'
+      ) {
+        try {
+          await signInWithRedirect(auth, provider)
+          return
+        } catch (redirectErr) {
+          console.warn('Redirect auth error:', redirectErr)
+        }
+      }
+
+      // Provide user-friendly message
+      if (popupErr.code === 'auth/popup-blocked') {
+        throw new Error('Google sign-in popup was blocked by your browser. Please allow popups or use email sign-in.')
+      } else if (popupErr.code === 'auth/unauthorized-domain') {
+        throw new Error('Please sign in with your email and password.')
+      } else if (popupErr.code === 'auth/operation-not-allowed') {
+        throw new Error('Google sign-in is currently unavailable. Please use Email & Password to sign in.')
+      }
+      throw popupErr
+    }
+
+    if (!user) return null
 
     const profileData = {
       uid: user.uid,
       name: user.displayName || user.email,
-      email: user.email,
-      emailVerified: true, // Google accounts are pre-verified by Google
+      email: user.email.toLowerCase(),
+      emailVerified: true,
       photoURL: user.photoURL,
       createdAt: new Date().toISOString(),
     }
