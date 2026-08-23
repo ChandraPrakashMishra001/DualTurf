@@ -24,10 +24,21 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  // If already logged in and redirect parameter exists, navigate immediately
+  // If already logged in, redirect to intended destination.
+  // On Android: after signInWithRedirect, page reloads without ?redirect= param,
+  // so we also check sessionStorage for the pending destination.
   useEffect(() => {
-    if (currentUser && redirectUrl) {
-      router.push(redirectUrl);
+    if (!currentUser) return;
+    const destination =
+      redirectUrl ||
+      (() => {
+        try { return sessionStorage.getItem('dualturf_auth_redirect') } catch { return null }
+      })();
+    if (destination) {
+      try { sessionStorage.removeItem('dualturf_auth_redirect') } catch {}
+      router.push(destination);
+    } else {
+      // Logged in with no specific destination — show account dashboard (already rendered below)
     }
   }, [currentUser, redirectUrl, router]);
 

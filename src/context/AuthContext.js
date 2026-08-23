@@ -62,19 +62,14 @@ export function AuthProvider({ children }) {
           } catch (e) {}
           try {
             localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
-            // If there's a pending redirect URL, navigate to it
-            const pendingRedirect = sessionStorage.getItem('dualturf_auth_redirect')
-            if (pendingRedirect) {
-              sessionStorage.removeItem('dualturf_auth_redirect')
-              window.location.href = pendingRedirect
-            }
+            // NOTE: navigation is handled by the login page's useEffect which watches currentUser
+            // and reads sessionStorage('dualturf_auth_redirect') set before signInWithRedirect
           } catch (e) {}
           setCurrentUser(profileData)
           setUserProfile(profileData)
         }
       })
       .catch((err) => {
-        // Silently suppress "database closing" noise — not a real error
         const msg = err?.message || ''
         if (!msg.includes('closing') && !msg.includes('hidden') && !msg.includes('IDBDatabase')) {
           console.warn('Google redirect result error:', err?.code, msg)
