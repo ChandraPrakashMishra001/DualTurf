@@ -59,11 +59,18 @@ function LoginForm() {
   const handleGoogleSignIn = async () => {
     setError(null);
     try {
-      await loginWithGoogle();
-      setSuccessMsg('Signed in with Google!');
-      if (redirectUrl) {
-        router.push(redirectUrl);
+      // On Android, loginWithGoogle triggers a page redirect — no need to handle navigation here
+      // On iOS/desktop, it returns a profile and we navigate manually
+      const result = await loginWithGoogle(redirectUrl || '/account/orders');
+      if (result) {
+        setSuccessMsg('Signed in with Google!');
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.push('/account/orders');
+        }
       }
+      // If result is undefined, Android is doing a redirect — page will reload automatically
     } catch (err) {
       let msg = err.message || 'Google sign-in failed. Please try again.';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {

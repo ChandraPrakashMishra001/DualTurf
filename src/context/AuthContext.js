@@ -16,6 +16,12 @@ import {
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
 
+// Detect Android browser — Android uses signInWithRedirect to avoid IndexedDB closing error
+function isAndroid() {
+  if (typeof navigator === 'undefined') return false
+  return /android/i.test(navigator.userAgent)
+}
+
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
@@ -24,7 +30,7 @@ export function AuthProvider({ children }) {
   const [userOrders, setUserOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Load saved session on init & handle mobile redirect result
+  // Load saved session on init & handle Google redirect result (Android)
   useEffect(() => {
     try {
       const localCurrent = localStorage.getItem('dualturf_current_user')
@@ -38,7 +44,44 @@ export function AuthProvider({ children }) {
       console.warn('LocalStorage session read error:', e)
     }
 
-    // OnAuthStateChanged listener for clean session management
+    // Handle Google Redirect result (Android Chrome uses redirect instead of popup)
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          const user = result.user
+          const profileData = {
+            uid: user.uid,
+            name: user.displayName || user.email?.split('@')[0] || 'Customer',
+            email: user.email.toLowerCase(),
+            emailVerified: true,
+            photoURL: user.photoURL || '',
+            createdAt: new Date().toISOString(),
+          }
+          try {
+            await setDoc(doc(db, 'users', user.uid), profileData, { merge: true })
+          } catch (e) {}
+          try {
+            localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
+            // If there's a pending redirect URL, navigate to it
+            const pendingRedirect = sessionStorage.getItem('dualturf_auth_redirect')
+            if (pendingRedirect) {
+              sessionStorage.removeItem('dualturf_auth_redirect')
+              window.location.href = pendingRedirect
+            }
+          } catch (e) {}
+          setCurrentUser(profileData)
+          setUserProfile(profileData)
+        }
+      })
+      .catch((err) => {
+        // Silently suppress "database closing" noise — not a real error
+        const msg = err?.message || ''
+        if (!msg.includes('closing') && !msg.includes('hidden') && !msg.includes('IDBDatabase')) {
+          console.warn('Google redirect result error:', err?.code, msg)
+        }
+      })
+
+    // Auth state listener
     try {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -60,7 +103,8 @@ export function AuthProvider({ children }) {
             }
             fetchUserOrders(user.uid)
           } catch (e) {
-            console.warn('Firestore fetch fallback:', e)
+            // Firestore may fail on Android if tab was backgrounded — use session fallback
+            setUserProfile(sessionUser)
           }
         }
         setLoading(false)
@@ -212,10 +256,28 @@ export function AuthProvider({ children }) {
     return sessionObj
   }
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (redirectUrl) => {
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
 
+    // Android Chrome: signInWithPopup causes IndexedDB "database closing" error
+    // because opening a popup suspends the original tab's IndexedDB connection.
+    // Solution: use signInWithRedirect on Android, popup on iOS/desktop.
+    if (isAndroid()) {
+      try {
+        if (redirectUrl) {
+          sessionStorage.setItem('dualturf_auth_redirect', redirectUrl)
+        }
+        await signInWithRedirect(auth, provider)
+        // Page will reload — result handled by getRedirectResult in useEffect
+        return
+      } catch (err) {
+        console.warn('Android redirect sign-in error:', err)
+        throw new Error('Google sign-in failed. Please use Email & Password instead.')
+      }
+    }
+
+    // iOS / Desktop: use popup
     let user = null
     try {
       const result = await signInWithPopup(auth, provider)
@@ -243,10 +305,10 @@ export function AuthProvider({ children }) {
 
     const profileData = {
       uid: user.uid,
-      name: user.displayName || user.email,
+      name: user.displayName || user.email?.split('@')[0] || 'Customer',
       email: user.email.toLowerCase(),
       emailVerified: true,
-      photoURL: user.photoURL,
+      photoURL: user.photoURL || '',
       createdAt: new Date().toISOString(),
     }
 

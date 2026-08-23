@@ -96,7 +96,10 @@ export default function CartPage() {
 
   const handleGoogleQuickLogin = async () => {
     try {
-      await loginWithGoogle()
+      const result = await loginWithGoogle('/cart')
+      // On iOS/desktop: result is returned
+      // On Android: page redirects to Google and comes back — no result here
+      if (!result) return
     } catch (err) {
       console.warn('Google quick sign-in fallback on mobile:', err)
       window.location.href = '/account/login?redirect=/cart'
