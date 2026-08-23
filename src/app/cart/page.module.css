@@ -643,3 +643,148 @@
   font-size: 0.875rem;
   line-height: 1.5;
 }
+
+/* Payment Gateway Modal Styles */
+.gatewayOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.gatewayModal {
+  background-color: #0e0e0e;
+  border: 1px solid rgba(196, 255, 61, 0.4);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 540px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(196, 255, 61, 0.15);
+  display: flex;
+  flex-direction: column;
+  animation: modalPop 0.25s ease-out;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gatewayHeader {
+  background: linear-gradient(135deg, #141414, #1a1a1a);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gatewayBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gatewayBrandTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent-color);
+  letter-spacing: 0.05em;
+}
+
+.gatewayClose {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.gatewayClose:hover {
+  color: #fff;
+}
+
+.gatewayAmountBox {
+  background-color: #161616;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gatewayAmountLabel {
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.gatewayAmountVal {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.gatewayBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.gatewayTabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  background-color: #141414;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gatewayTab {
+  background: none;
+  border: none;
+  color: #888888;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gatewayTab.active {
+  background-color: var(--accent-color);
+  color: #000000;
+}
+
+.gatewayTabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gatewayFooter {
+  background-color: #141414;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem 1.5rem;
+}
