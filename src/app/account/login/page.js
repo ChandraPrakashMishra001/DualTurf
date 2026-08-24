@@ -24,26 +24,12 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  // Helper: get the intended destination after login
-  const getPostLoginDestination = () => {
-    if (redirectUrl) return redirectUrl;
-    try { return localStorage.getItem('dualturf_auth_redirect') || null; } catch { return null; }
-  };
-
-  // On Android after signInWithRedirect, this page reloads with currentUser already set
-  // (from localStorage cache in AuthContext). We must navigate AWAY immediately.
-  // We do this synchronously in the render cycle, not in a useEffect, to avoid
-  // showing the "My Account" dashboard before navigating.
+  // If already logged in and there's a redirect target, go there
   useEffect(() => {
-    if (!currentUser) return;
-    const destination = getPostLoginDestination();
-    if (destination) {
-      try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
-      // Use window.location.href for a hard navigation — guaranteed to leave this page
-      window.location.href = destination;
+    if (currentUser && redirectUrl) {
+      router.push(redirectUrl);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser, redirectUrl, router]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -72,22 +58,16 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
-    // Store redirect destination in localStorage FIRST — before anything else.
-    // On Android, signInWithRedirect navigates away immediately, and sessionStorage
-    // may not survive the cross-origin round-trip. localStorage always does.
-    const destination = redirectUrl || '/account/orders';
-    try { localStorage.setItem('dualturf_auth_redirect', destination); } catch {}
     try {
-      const result = await loginWithGoogle(destination);
+      const result = await loginWithGoogle();
       if (result) {
-        // iOS/Desktop: popup returned immediately, navigate now
-        try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
-        router.push(destination);
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else {
+          router.push('/account/orders');
+        }
       }
-      // Android: result is undefined — signInWithRedirect navigated away.
-      // The page will reload and the useEffect above handles navigation.
     } catch (err) {
-      try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
       let msg = err.message || 'Google sign-in failed. Please try again.';
       if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
         msg = '⚠️ Google Provider is currently disabled in Firebase. Enable Google under Firebase Console → Authentication → Sign-in method.';

@@ -10,17 +10,9 @@ import {
   sendEmailVerification,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { auth, db } from '@/lib/firebase'
-
-// Detect Android browser — Android uses signInWithRedirect to avoid IndexedDB closing error
-function isAndroid() {
-  if (typeof navigator === 'undefined') return false
-  return /android/i.test(navigator.userAgent)
-}
 
 const AuthContext = createContext()
 
@@ -30,7 +22,7 @@ export function AuthProvider({ children }) {
   const [userOrders, setUserOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Load saved session on init & handle Google redirect result (Android)
+  // Load saved session on init
   useEffect(() => {
     try {
       const localCurrent = localStorage.getItem('dualturf_current_user')
@@ -43,49 +35,6 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.warn('LocalStorage session read error:', e)
     }
-
-    // Handle Google Redirect result (Android Chrome uses redirect instead of popup)
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result && result.user) {
-          const user = result.user
-          const profileData = {
-            uid: user.uid,
-            name: user.displayName || user.email?.split('@')[0] || 'Customer',
-            email: user.email.toLowerCase(),
-            emailVerified: true,
-            photoURL: user.photoURL || '',
-            createdAt: new Date().toISOString(),
-          }
-          try {
-            await setDoc(doc(db, 'users', user.uid), profileData, { merge: true })
-          } catch (e) {}
-
-          // Save session to localStorage
-          try { localStorage.setItem('dualturf_current_user', JSON.stringify(profileData)) } catch (e) {}
-
-          setCurrentUser(profileData)
-          setUserProfile(profileData)
-
-          // Navigate to the stored destination immediately.
-          // The login page's useEffect also does this, but this handles the case
-          // where the user had no prior localStorage session (so currentUser
-          // wasn't pre-set and the useEffect fires here via state update).
-          try {
-            const dest = localStorage.getItem('dualturf_auth_redirect')
-            if (dest) {
-              localStorage.removeItem('dualturf_auth_redirect')
-              window.location.href = dest
-            }
-          } catch (e) {}
-        }
-      })
-      .catch((err) => {
-        const msg = err?.message || ''
-        if (!msg.includes('closing') && !msg.includes('hidden') && !msg.includes('IDBDatabase')) {
-          console.warn('Google redirect result error:', err?.code, msg)
-        }
-      })
 
     // Auth state listener
     try {
@@ -262,51 +211,51 @@ export function AuthProvider({ children }) {
     return sessionObj
   }
 
-  const loginWithGoogle = async (redirectUrl) => {
+  const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
 
-    // Android Chrome: signInWithPopup causes IndexedDB "database closing" error
-    // because opening a popup suspends the original tab's IndexedDB connection.
-    // Solution: use signInWithRedirect on Android, popup on iOS/desktop.
-    // We use localStorage (not sessionStorage) because sessionStorage can be
-    // cleared by some Android browsers during cross-origin OAuth redirects.
-    if (isAndroid()) {
-      try {
-        if (redirectUrl) {
-          localStorage.setItem('dualturf_auth_redirect', redirectUrl)
-        }
-        await signInWithRedirect(auth, provider)
-        // Page will reload — result handled by getRedirectResult in useEffect
-        return
-      } catch (err) {
-        console.warn('Android redirect sign-in error:', err)
-        throw new Error('Google sign-in failed. Please use Email & Password instead.')
-      }
-    }
-
-    // iOS / Desktop: use popup
     let user = null
     try {
       const result = await signInWithPopup(auth, provider)
       user = result.user
     } catch (popupErr) {
-      console.warn('Popup sign in error:', popupErr.code, popupErr.message)
+      const msg = popupErr?.message || ''
+      const code = popupErr?.code || ''
 
-      if (
-        popupErr.code === 'auth/popup-blocked' ||
-        popupErr.code === 'auth/cancelled-popup-request' ||
-        popupErr.code === 'auth/popup-closed-by-user'
+      // On Android Chrome, IndexedDB gets suspended when the popup opens.
+      // Firebase throws "database is closing" or IDBDatabase errors BUT the
+      // auth operation STILL SUCCEEDS via localStorage fallback.
+      // In this case, auth.currentUser is already populated — use it directly.
+      const isIndexedDBError =
+        msg.includes('closing') ||
+        msg.includes('IDBDatabase') ||
+        msg.includes('database') ||
+        msg.includes('hidden')
+
+      if (isIndexedDBError) {
+        // Wait briefly for Firebase to settle the auth state via localStorage
+        await new Promise((r) => setTimeout(r, 800))
+        if (auth.currentUser) {
+          user = auth.currentUser
+        } else {
+          // Auth truly failed
+          throw new Error('Sign-in failed. Please try again or use Email & Password.')
+        }
+      } else if (
+        code === 'auth/popup-blocked' ||
+        code === 'auth/cancelled-popup-request' ||
+        code === 'auth/popup-closed-by-user'
       ) {
         throw new Error('Google sign-in popup was blocked or closed. Please use Email & Password to sign in.')
-      } else if (popupErr.code === 'auth/unauthorized-domain') {
+      } else if (code === 'auth/unauthorized-domain') {
         throw new Error('Please sign in with your email and password.')
-      } else if (popupErr.code === 'auth/operation-not-allowed') {
+      } else if (code === 'auth/operation-not-allowed') {
         throw new Error('Google sign-in is currently unavailable. Please use Email & Password to sign in.')
-      } else if (popupErr.code === 'auth/argument-error') {
-        throw new Error('Please sign in with your email and password below.')
+      } else {
+        console.warn('Popup sign in error:', code, msg)
+        throw new Error(msg || 'Google sign-in failed. Please use Email & Password.')
       }
-      throw new Error(popupErr.message || 'Google sign-in failed. Please use Email & Password.')
     }
 
     if (!user) return null
