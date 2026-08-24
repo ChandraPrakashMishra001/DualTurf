@@ -71,18 +71,55 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const fetchUserOrders = async (uid) => {
+  const fetchUserOrders = async (uid, email) => {
+    const ordersMap = new Map()
+
+    // 1. Try local storage (instant)
     try {
-      const q = query(collection(db, 'orders'), where('userId', '==', uid))
-      const querySnapshot = await getDocs(q)
-      const orders = []
-      querySnapshot.forEach((doc) => {
-        orders.push({ id: doc.id, ...doc.data() })
+      const localOrders = JSON.parse(localStorage.getItem('dualturf_customer_orders') || '[]')
+      localOrders.forEach(o => {
+        if (o.orderId) ordersMap.set(o.orderId, o)
       })
-      setUserOrders(orders)
+    } catch (e) {}
+
+    // 2. Try Firestore queries (by userId and by customerEmail)
+    try {
+      if (uid) {
+        const qUid = query(collection(db, 'orders'), where('userId', '==', uid))
+        const snapUid = await getDocs(qUid)
+        snapUid.forEach((docSnap) => {
+          ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+        })
+      }
+      const targetEmail = (email || currentUser?.email || '').trim().toLowerCase()
+      if (targetEmail) {
+        const qEmail = query(collection(db, 'orders'), where('customerEmail', '==', targetEmail))
+        const snapEmail = await getDocs(qEmail)
+        snapEmail.forEach((docSnap) => {
+          ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+        })
+      }
     } catch (e) {
-      console.warn('Failed to fetch user orders:', e)
+      console.warn('Firestore order fetch notice:', e)
     }
+
+    // 3. Try /api/orders
+    try {
+      const targetEmail = (email || currentUser?.email || '').trim().toLowerCase()
+      if (targetEmail) {
+        const res = await fetch(`/api/orders?email=${encodeURIComponent(targetEmail)}`)
+        const data = await res.json()
+        if (data.success && Array.isArray(data.orders)) {
+          data.orders.forEach(o => {
+            if (o.orderId) ordersMap.set(o.orderId, o)
+          })
+        }
+      }
+    } catch (e) {}
+
+    const allOrders = Array.from(ordersMap.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    setUserOrders(allOrders)
+    return allOrders
   }
 
   const register = async (firstName, lastName, email, password) => {

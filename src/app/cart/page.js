@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
+import { doc, setDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import styles from './page.module.css'
 
 export default function CartPage() {
@@ -132,11 +134,17 @@ export default function CartPage() {
   const finalizeOrderPlacement = async (paymentTxnId, customOrderId) => {
     const isPartial = paymentMethod === 'partial_cod'
     const generatedId = customOrderId || `DT-${Math.floor(100000 + Math.random() * 900000)}`
+    const userEmail = (formData.email || currentUser?.email || '').trim().toLowerCase()
 
     const orderPayload = {
       orderId: generatedId,
+      userId: currentUser?.uid || null,
+      customerEmail: userEmail,
       paymentId: paymentTxnId,
-      customer: formData,
+      customer: {
+        ...formData,
+        email: userEmail,
+      },
       items: cart,
       subtotal,
       shippingFee,
@@ -148,8 +156,24 @@ export default function CartPage() {
         ? `Partial COD (₹${advanceAmount} Advance Paid Online via Razorpay, ₹${remainingCODAmount} Balance on Delivery incl. ₹50 COD Cash Handling Fee)`
         : `Full Online Payment (₹${totalAmount} Paid via Razorpay)`,
       status: isPartial ? 'Partial COD - Advance Paid' : 'Online Paid - Awaiting Dispatch',
+      createdAt: new Date().toISOString(),
     }
 
+    // 1. Save directly to Cloud Firestore
+    try {
+      await setDoc(doc(db, 'orders', generatedId), orderPayload)
+    } catch (fsErr) {
+      console.warn('Firestore order save note:', fsErr)
+    }
+
+    // 2. Save directly to Customer LocalStorage (instant client-side availability)
+    try {
+      const existing = JSON.parse(localStorage.getItem('dualturf_customer_orders') || '[]')
+      const updated = [orderPayload, ...existing.filter(o => o.orderId !== generatedId)]
+      localStorage.setItem('dualturf_customer_orders', JSON.stringify(updated))
+    } catch (lsErr) {}
+
+    // 3. Post to API for email dispatch & server-side record
     try {
       await fetch('/api/orders', {
         method: 'POST',

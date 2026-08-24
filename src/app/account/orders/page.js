@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import styles from './Orders.module.css'
 
 export default function MyOrdersPage() {
@@ -57,13 +59,58 @@ export default function MyOrdersPage() {
   }, [currentUser, userProfile])
 
   const fetchOrders = async () => {
+    if (!currentUser) return
     try {
       setLoading(true)
-      const res = await fetch(`/api/orders?email=${encodeURIComponent(currentUser.email)}`)
-      const data = await res.json()
-      if (data.success) {
-        setOrders(data.orders || [])
+      const ordersMap = new Map()
+
+      // 1. Try local storage (instant)
+      try {
+        const localOrders = JSON.parse(localStorage.getItem('dualturf_customer_orders') || '[]')
+        localOrders.forEach(o => {
+          if (o.orderId) ordersMap.set(o.orderId, o)
+        })
+      } catch (e) {}
+
+      // 2. Try Firestore queries
+      try {
+        if (currentUser.uid) {
+          const qUid = query(collection(db, 'orders'), where('userId', '==', currentUser.uid))
+          const snapUid = await getDocs(qUid)
+          snapUid.forEach((docSnap) => {
+            ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+          })
+        }
+        if (currentUser.email) {
+          const cleanEmail = currentUser.email.trim().toLowerCase()
+          const qEmail = query(collection(db, 'orders'), where('customerEmail', '==', cleanEmail))
+          const snapEmail = await getDocs(qEmail)
+          snapEmail.forEach((docSnap) => {
+            ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+          })
+        }
+      } catch (fsErr) {
+        console.warn('Firestore order fetch notice:', fsErr)
       }
+
+      // 3. Try /api/orders
+      try {
+        const targetEmail = currentUser.email ? currentUser.email.trim().toLowerCase() : ''
+        if (targetEmail) {
+          const res = await fetch(`/api/orders?email=${encodeURIComponent(targetEmail)}`)
+          const data = await res.json()
+          if (data.success && Array.isArray(data.orders)) {
+            data.orders.forEach(o => {
+              if (o.orderId) ordersMap.set(o.orderId, o)
+            })
+          }
+        }
+      } catch (apiErr) {
+        console.warn('API order fetch notice:', apiErr)
+      }
+
+      const merged = Array.from(ordersMap.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      setOrders(merged)
     } catch (err) {
       console.error('Error fetching orders:', err)
     } finally {

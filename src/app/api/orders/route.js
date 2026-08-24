@@ -329,14 +329,23 @@ async function sendActionEmail(order, actionStr) {
   }
 }
 
-// GET /api/orders -> Return orders (filtered by email if provided, else all)
+// GET /api/orders -> Return orders (filtered by email or userId if provided, else all)
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
+  const userId = searchParams.get('userId');
   const allOrders = getOrders();
   
-  if (email) {
-    const userOrders = allOrders.filter(o => o.customer?.email === email);
+  if (email || userId) {
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const userOrders = allOrders.filter(o => {
+      const matchEmail = cleanEmail && (
+        (o.customerEmail && o.customerEmail.trim().toLowerCase() === cleanEmail) ||
+        (o.customer?.email && o.customer.email.trim().toLowerCase() === cleanEmail)
+      );
+      const matchUid = userId && o.userId === userId;
+      return matchEmail || matchUid;
+    });
     return NextResponse.json({ success: true, orders: userOrders });
   }
   
