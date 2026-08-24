@@ -60,13 +60,24 @@ export function AuthProvider({ children }) {
           try {
             await setDoc(doc(db, 'users', user.uid), profileData, { merge: true })
           } catch (e) {}
-          try {
-            localStorage.setItem('dualturf_current_user', JSON.stringify(profileData))
-            // NOTE: navigation is handled by the login page's useEffect which watches currentUser
-            // and reads localStorage('dualturf_auth_redirect') set before signInWithRedirect
-          } catch (e) {}
+
+          // Save session to localStorage
+          try { localStorage.setItem('dualturf_current_user', JSON.stringify(profileData)) } catch (e) {}
+
           setCurrentUser(profileData)
           setUserProfile(profileData)
+
+          // Navigate to the stored destination immediately.
+          // The login page's useEffect also does this, but this handles the case
+          // where the user had no prior localStorage session (so currentUser
+          // wasn't pre-set and the useEffect fires here via state update).
+          try {
+            const dest = localStorage.getItem('dualturf_auth_redirect')
+            if (dest) {
+              localStorage.removeItem('dualturf_auth_redirect')
+              window.location.href = dest
+            }
+          } catch (e) {}
         }
       })
       .catch((err) => {

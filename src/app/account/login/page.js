@@ -24,22 +24,26 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  // If already logged in, redirect to intended destination.
-  // On Android: after signInWithRedirect, the page reloads to /account/login
-  // without query params. We read the destination from localStorage (set before redirect).
+  // Helper: get the intended destination after login
+  const getPostLoginDestination = () => {
+    if (redirectUrl) return redirectUrl;
+    try { return localStorage.getItem('dualturf_auth_redirect') || null; } catch { return null; }
+  };
+
+  // On Android after signInWithRedirect, this page reloads with currentUser already set
+  // (from localStorage cache in AuthContext). We must navigate AWAY immediately.
+  // We do this synchronously in the render cycle, not in a useEffect, to avoid
+  // showing the "My Account" dashboard before navigating.
   useEffect(() => {
     if (!currentUser) return;
-    const destination =
-      redirectUrl ||
-      (() => {
-        try { return localStorage.getItem('dualturf_auth_redirect') } catch { return null }
-      })();
+    const destination = getPostLoginDestination();
     if (destination) {
-      try { localStorage.removeItem('dualturf_auth_redirect') } catch {}
-      router.push(destination);
+      try { localStorage.removeItem('dualturf_auth_redirect'); } catch {}
+      // Use window.location.href for a hard navigation — guaranteed to leave this page
+      window.location.href = destination;
     }
-    // If no destination, stay on page — login page will render the account dashboard
-  }, [currentUser, redirectUrl, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
