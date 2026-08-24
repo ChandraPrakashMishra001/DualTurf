@@ -131,6 +131,12 @@ async function sendOrderEmails(order) {
               <td style="padding:4px 0;color:#aaa;">Shipping:</td>
               <td style="padding:4px 0;text-align:right;">₹${order.shippingFee || 80}</td>
             </tr>
+            ${order.codFee ? `
+            <tr>
+              <td style="padding:4px 0;color:#ffb800;">COD Handling Fee:</td>
+              <td style="padding:4px 0;text-align:right;color:#ffb800;">+₹${order.codFee}</td>
+            </tr>
+            ` : ''}
             <tr style="border-top:1px solid #333;">
               <td style="padding:6px 0;font-weight:700;">Total Value:</td>
               <td style="padding:6px 0;text-align:right;font-weight:700;color:#c4ff3d;font-size:16px;">₹${order.totalAmount || 0}</td>
@@ -212,6 +218,12 @@ async function sendOrderEmails(order) {
               <td style="padding:4px 0;color:#888;">Total Order Amount:</td>
               <td style="padding:4px 0;text-align:right;font-weight:700;">₹${order.totalAmount || 0}</td>
             </tr>
+            ${order.codFee ? `
+            <tr>
+              <td style="padding:4px 0;color:#ffb800;">COD Cash Handling Fee:</td>
+              <td style="padding:4px 0;text-align:right;color:#ffb800;">+₹${order.codFee}</td>
+            </tr>
+            ` : ''}
             ${order.advanceAmount ? `
             <tr style="color:#c4ff3d;">
               <td style="padding:4px 0;font-weight:600;">Advance Paid Online:</td>
@@ -220,7 +232,7 @@ async function sendOrderEmails(order) {
             ` : ''}
             ${(order.balanceCOD !== undefined && order.balanceCOD > 0) ? `
             <tr style="color:#ffffff;">
-              <td style="padding:4px 0;font-weight:600;">Balance to Pay on Delivery:</td>
+              <td style="padding:4px 0;font-weight:600;">Balance to Pay on Delivery (COD):</td>
               <td style="padding:4px 0;text-align:right;font-weight:600;">₹${order.balanceCOD}</td>
             </tr>
             ` : ''}
@@ -341,6 +353,7 @@ export async function POST(request) {
       items,
       subtotal,
       shippingFee = 80,
+      codFee = 0,
       totalAmount,
       advanceAmount,
       balanceCOD,
@@ -357,7 +370,8 @@ export async function POST(request) {
       items: items || [],
       subtotal: subtotal || 0,
       shippingFee: shippingFee || 80,
-      totalAmount: totalAmount || (subtotal + shippingFee),
+      codFee: codFee || 0,
+      totalAmount: totalAmount || (subtotal + (shippingFee || 80) + (codFee || 0)),
       advanceAmount: advanceAmount !== undefined ? advanceAmount : 0,
       balanceCOD: balanceCOD !== undefined ? balanceCOD : 0,
       paymentMethod: paymentMethod || '100% Online Payment',

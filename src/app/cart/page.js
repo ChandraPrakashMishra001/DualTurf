@@ -13,9 +13,10 @@ export default function CartPage() {
   // Payment method selection: 'full_online' | 'partial_cod'
   const [paymentMethod, setPaymentMethod] = useState('full_online')
 
-  // Shipping Fee configuration
+  // Shipping & COD Fee configuration
   const shippingFee = cart.length > 0 ? 80 : 0
-  const totalAmount = subtotal + shippingFee
+  const codFee = paymentMethod === 'partial_cod' ? 50 : 0
+  const totalAmount = subtotal + shippingFee + codFee
 
   // Partial COD Calculations (₹399 per customized jersey, ₹199 per standard jersey)
   const customizedCount = cart.reduce((sum, it) => (it.customName || it.customNumber) ? sum + it.quantity : sum, 0)
@@ -139,11 +140,12 @@ export default function CartPage() {
       items: cart,
       subtotal,
       shippingFee,
+      codFee: isPartial ? 50 : 0,
       totalAmount,
       advanceAmount: isPartial ? advanceAmount : totalAmount,
       balanceCOD: isPartial ? remainingCODAmount : 0,
       paymentMethod: isPartial
-        ? `Partial COD (₹${advanceAmount} Advance Paid Online via Razorpay, ₹${remainingCODAmount} Balance on Delivery)`
+        ? `Partial COD (₹${advanceAmount} Advance Paid Online via Razorpay, ₹${remainingCODAmount} Balance on Delivery incl. ₹50 COD Cash Handling Fee)`
         : `Full Online Payment (₹${totalAmount} Paid via Razorpay)`,
       status: isPartial ? 'Partial COD - Advance Paid' : 'Online Paid - Awaiting Dispatch',
     }
@@ -184,8 +186,8 @@ ${cart.map((it) => {
 
 💳 *Payment Breakdown:*
 • Payment Mode: ${isPartial ? 'Partial Cash on Delivery (Partial COD)' : 'Full Online Payment'}
-• Total Order Value: ₹${totalAmount} (Subtotal: ₹${subtotal} + Shipping: ₹${shippingFee})
-${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} (${advanceBreakdownText})\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount}` : `• 🟢 Total Paid Online (Razorpay): ₹${totalAmount}`}`
+• Total Order Value: ₹${totalAmount} (Subtotal: ₹${subtotal} + Shipping: ₹${shippingFee}${isPartial ? ' + COD Fee: ₹50' : ''})
+${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} (${advanceBreakdownText})\n• 💵 Balance to Collect on Delivery (COD): ₹${remainingCODAmount} (includes ₹50 cash handling fee)` : `• 🟢 Total Paid Online (Razorpay): ₹${totalAmount}`}`
 
       const waUrl = `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
       setTimeout(() => {
@@ -309,8 +311,8 @@ ${placedOrder.items.map((it) => {
 
 💳 *Payment Breakdown:*
 • Payment Mode: ${placedOrder.paymentMethod}
-• Total Order Value: ₹${placedOrder.totalAmount} (Subtotal: ₹${placedOrder.subtotal} + Shipping: ₹${placedOrder.shippingFee || 80})
-${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\n• 💵 Balance to Collect on Delivery (COD): ₹${placedOrder.balanceCOD}` : `• 🟢 Total Paid Online: ₹${placedOrder.totalAmount}`}`
+• Total Order Value: ₹${placedOrder.totalAmount} (Subtotal: ₹${placedOrder.subtotal} + Shipping: ₹${placedOrder.shippingFee || 80}${isPartial ? ' + COD Fee: ₹50' : ''})
+${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\n• 💵 Balance to Collect on Delivery (COD): ₹${placedOrder.balanceCOD} (includes ₹50 cash handling fee)` : `• 🟢 Total Paid Online: ₹${placedOrder.totalAmount}`}`
 
     return `https://wa.me/917656072801?text=${encodeURIComponent(text)}`
   }
@@ -727,9 +729,10 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                     <span style={{ color: paymentMethod === 'partial_cod' ? '#c4ff3d' : '#ffffff', fontWeight: 800 }}>⚡ Partial COD</span>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(255,184,0,0.15)', color: '#FFB800', border: '1px solid rgba(255,184,0,0.3)', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>+₹50 COD FEE</span>
                   </div>
                   <p style={{ fontSize: '0.825rem', color: '#aaaaaa', margin: 0, lineHeight: '1.4' }}>
-                    Pay <strong>₹{advanceAmount} advance online</strong> now, and remaining <strong>₹{remainingCODAmount}</strong> on delivery.
+                    Pay <strong>₹{advanceAmount} advance online</strong> now, and remaining <strong>₹{remainingCODAmount}</strong> on delivery (includes ₹50 cash transaction fee).
                   </p>
                 </button>
               </div>
@@ -744,6 +747,12 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                 <span>Flat Express Shipping:</span>
                 <strong>₹{shippingFee}</strong>
               </div>
+              {paymentMethod === 'partial_cod' && (
+                <div className={styles.detailRow} style={{ color: '#FFB800' }}>
+                  <span>COD Cash Handling Fee:</span>
+                  <strong>+₹50</strong>
+                </div>
+              )}
               <div className={styles.detailRow}>
                 <span>Total Order Value:</span>
                 <strong style={{ fontSize: '1.15rem' }}>₹{totalAmount}</strong>
@@ -769,9 +778,12 @@ ${isPartial ? `• 🟢 Advance Online Payment: ₹${placedOrder.advanceAmount}\
                     • Advance Breakdown: <strong>{advanceBreakdownText}</strong>
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ffffff', fontWeight: '700', fontSize: '0.95rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.6rem' }}>
-                    <span>💵 Remaining Balance to Collect on Delivery (COD):</span>
+                    <span>💵 Remaining Balance on Delivery (COD):</span>
                     <span style={{ color: '#fff', fontSize: '1.05rem' }}>₹{remainingCODAmount}</span>
                   </div>
+                  <p style={{ fontSize: '0.75rem', color: '#888888', margin: 0 }}>
+                    *(Includes ₹50 courier cash handling transaction fee)*
+                  </p>
                 </div>
               ) : (
                 <div style={{

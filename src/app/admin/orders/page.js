@@ -158,10 +158,21 @@ export default function AdminOrdersPage() {
                   <div className={styles.totalRow}>
                     <span>Subtotal: ₹{order.subtotal || order.totalAmount}</span>
                     {order.shippingFee !== undefined && <span>Shipping Fee: ₹{order.shippingFee}</span>}
+                    {order.codFee ? <span>COD Handling Fee: ₹{order.codFee}</span> : null}
                     <div style={{ marginTop: '0.25rem' }}>
-                      <span>Total Amount Paid: </span>
+                      <span>Total Order Value: </span>
                       <strong className={styles.totalVal}>₹{order.totalAmount || order.subtotal}</strong>
                     </div>
+                    {order.advanceAmount ? (
+                      <div style={{ color: '#c4ff3d', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        ⚡ Advance Paid: ₹{order.advanceAmount}
+                      </div>
+                    ) : null}
+                    {order.balanceCOD > 0 ? (
+                      <div style={{ color: '#ffffff', fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        💵 Collect on Delivery: ₹{order.balanceCOD}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
