@@ -15,6 +15,7 @@ export default function ProductClient({ product, relatedProducts, category }) {
   const [customNumber, setCustomNumber] = useState('');
   const [openAccordion, setOpenAccordion] = useState('shipping');
   const [toastMsg, setToastMsg] = useState(null);
+  const [showSizeChart, setShowSizeChart] = useState(false);
 
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
@@ -110,7 +111,14 @@ export default function ProductClient({ product, relatedProducts, category }) {
           <div className={styles.sizeSection}>
             <div className={styles.sizeHeader}>
               <span className={styles.sizeLabel}>Size: <strong>{selectedSize}</strong></span>
-              <button className={styles.sizeGuideBtn}>Size Guide 📐</button>
+              <button 
+                type="button" 
+                className={styles.sizeGuideBtn}
+                onClick={() => setShowSizeChart(true)}
+                style={{ cursor: 'pointer', background: 'none', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+              >
+                Size Chart 📐
+              </button>
             </div>
             <div className={styles.sizeGrid}>
               {availableSizes.map(size => (
@@ -249,6 +257,107 @@ export default function ProductClient({ product, relatedProducts, category }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Size Chart Modal */}
+      {showSizeChart && (
+        <div 
+          onClick={() => setShowSizeChart(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem',
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#111111',
+              border: '1px solid #333333',
+              borderRadius: '12px',
+              maxWidth: '620px',
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)',
+              display: 'flex',
+              flexDirection: 'column',
+              maxHeight: '90vh',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '1rem 1.25rem',
+              borderBottom: '1px solid #222222',
+              backgroundColor: '#161616',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>📐</span>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.05em' }}>
+                  OFFICIAL SIZE CHART
+                </h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowSizeChart(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaaaaa',
+                  fontSize: '1.4rem',
+                  cursor: 'pointer',
+                  padding: '0.2rem 0.5rem',
+                  lineHeight: 1,
+                  borderRadius: '4px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{
+              padding: '1.25rem',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+            }}>
+              <div style={{ width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #2a2a2a', backgroundColor: '#000000' }}>
+                <img 
+                  src="/size.jpg" 
+                  alt="DualTurf Official Football Jersey Size Chart" 
+                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }}
+                  onError={(e) => {
+                    e.currentTarget.src = '/size.jpeg'
+                  }}
+                />
+              </div>
+
+              <div style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'rgba(196, 255, 61, 0.08)',
+                border: '1px solid rgba(196, 255, 61, 0.25)',
+                borderRadius: '6px',
+                fontSize: '0.825rem',
+                color: '#c4ff3d',
+                lineHeight: '1.5',
+              }}>
+                💡 <strong>Fit Recommendation:</strong> For standard athletic fit, choose your usual size. For a loose / streetwear fit, select one size up.
+              </div>
+            </div>
           </div>
         </div>
       )}
