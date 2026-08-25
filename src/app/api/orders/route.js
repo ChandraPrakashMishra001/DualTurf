@@ -15,12 +15,12 @@ import nodemailer from 'nodemailer';
 
 // ─── Email helpers ──────────────────────────────────────────────────────────
 
-async function sendOrderEmails(order) {
+export async function sendOrderEmails(order) {
   const smtpEmail = process.env.SMTP_EMAIL || 'turfdual@gmail.com';
   const smtpPassword = process.env.SMTP_PASSWORD;
 
   if (!smtpPassword || smtpPassword === 'YOUR_GMAIL_APP_PASSWORD_HERE') {
-    console.log('⚠️ SMTP not configured. Order recorded: #' + order.orderId);
+    console.log('⚠️ SMTP password not configured in environment variables. Order recorded: #' + order.orderId);
     return false;
   }
 
@@ -256,7 +256,16 @@ export async function POST(request) {
     const docRef = doc(collection(db, 'orders'), newOrder.orderId);
     await setDoc(docRef, newOrder, { merge: true });
     console.log(`🔔 NEW ORDER: #${newOrder.orderId} (Firestore doc: ${docRef.id})`);
-    sendOrderEmails(newOrder).catch(err => console.error('Order email error:', err));
+
+    // Await email dispatch so Vercel / serverless runtime does not freeze before SMTP completes
+    try {
+      const emailSuccess = await sendOrderEmails(newOrder);
+      if (emailSuccess) {
+        await updateDoc(docRef, { emailSent: true }).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Order email dispatch error:', err);
+    }
 
     return NextResponse.json({ success: true, order: { firestoreId: docRef.id, ...newOrder } });
   } catch (error) {

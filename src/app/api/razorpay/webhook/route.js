@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { sendOrderEmails } from '@/app/api/orders/route';
 
 export async function POST(req) {
   try {
@@ -46,9 +47,10 @@ export async function POST(req) {
           if (snap.exists()) {
             const isPartial = payment?.notes?.is_partial === 'yes';
             const newStatus = isPartial ? 'Partial COD - Advance Paid' : 'Online Paid - Awaiting Dispatch';
+            const existingData = snap.data();
 
             await updateDoc(docRef, {
-              paymentId: payment?.id || snap.data().paymentId,
+              paymentId: payment?.id || existingData.paymentId,
               razorpayOrderId: payment?.order_id || null,
               paymentStatus: 'captured',
               status: newStatus,
@@ -57,6 +59,13 @@ export async function POST(req) {
             });
 
             console.log(`✅ Order #${orderId} payment verified & updated via webhook (${payment?.id})`);
+
+            // Backup email trigger if frontend checkout didn't complete email dispatch
+            if (!existingData.emailSent) {
+              const updatedOrder = { ...existingData, orderId, status: newStatus, paymentId: payment?.id || existingData.paymentId };
+              await sendOrderEmails(updatedOrder).catch(e => console.error('Webhook email dispatch error:', e));
+              await updateDoc(docRef, { emailSent: true });
+            }
           } else {
             console.log(`ℹ️ Order #${orderId} not found in Firestore yet (may be writing client-side).`);
           }
