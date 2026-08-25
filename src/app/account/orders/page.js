@@ -78,7 +78,10 @@ export default function MyOrdersPage() {
           const qUid = query(collection(db, 'orders'), where('userId', '==', currentUser.uid))
           const snapUid = await getDocs(qUid)
           snapUid.forEach((docSnap) => {
-            ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+            const data = docSnap.data()
+            // Key by orderId (not doc ID) to deduplicate across write paths
+            const key = data.orderId || docSnap.id
+            ordersMap.set(key, { id: docSnap.id, ...data })
           })
         }
         if (currentUser.email) {
@@ -86,7 +89,9 @@ export default function MyOrdersPage() {
           const qEmail = query(collection(db, 'orders'), where('customerEmail', '==', cleanEmail))
           const snapEmail = await getDocs(qEmail)
           snapEmail.forEach((docSnap) => {
-            ordersMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() })
+            const data = docSnap.data()
+            const key = data.orderId || docSnap.id
+            ordersMap.set(key, { id: docSnap.id, ...data })
           })
         }
       } catch (fsErr) {

@@ -1,8 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import styles from './page.module.css';
+import { useState, useEffect, useCallback } from 'react';
+import styles from '../admin.module.css';
+
+function getToken() {
+  return typeof window !== 'undefined' ? sessionStorage.getItem('dualturf_admin_token') : '';
+}
+
+const STATUSES = ['All', 'New Order - Awaiting Verification', 'Pending Verification', 'Payment Verified', 'Shipped', 'Delivered', 'Cancelled'];
+
+function StatusBadge({ status }) {
+  const s = status || '';
+  let cls = styles.badgeGray;
+  if (s.includes('Delivered')) cls = styles.badgeGreen;
+  else if (s.includes('Shipped')) cls = styles.badgeBlue;
+  else if (s.includes('Verified') && !s.includes('Awaiting')) cls = styles.badgeYellow;
+  else if (s.includes('Cancelled') || s.includes('Return')) cls = styles.badgeRed;
+  return <span className={`${styles.badge} ${cls}`}>{status}</span>;
+}
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -10,186 +25,182 @@ export default function AdminOrdersPage() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch('/api/orders');
       const data = await res.json();
-      if (data.success) {
-        setOrders(data.orders || []);
-      }
+      if (data.success) setOrders(data.orders || []);
     } catch (err) {
-      console.error('Failed to fetch seller orders:', err);
+      console.error('Failed to fetch orders:', err);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchOrders();
   }, []);
 
-  const updateOrderStatus = async (orderId, newStatus) => {
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  const updateStatus = async (order, newStatus) => {
     try {
       const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, status: newStatus }),
+        body: JSON.stringify({ orderId: order.orderId, firestoreId: order.firestoreId, status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {
-        setOrders(prev =>
-          prev.map(o => (o.orderId === orderId ? { ...o, status: newStatus } : o))
-        );
+        setOrders(prev => prev.map(o => o.orderId === order.orderId ? { ...o, status: newStatus } : o));
       }
     } catch (err) {
       console.error('Failed to update status:', err);
     }
   };
 
-  const filteredOrders = orders.filter(o => {
-    const matchesStatus = filterStatus === 'All' || o.status === filterStatus;
+  const filtered = orders.filter(o => {
+    const matchStatus = filterStatus === 'All' || o.status === filterStatus;
     const q = searchQuery.toLowerCase();
-    const matchesSearch =
+    const matchSearch = !q ||
       o.orderId?.toLowerCase().includes(q) ||
       o.customer?.fullName?.toLowerCase().includes(q) ||
       o.customer?.phone?.includes(q) ||
-      o.utr?.toLowerCase().includes(q);
-    return matchesStatus && matchesSearch;
+      o.utr?.toLowerCase().includes(q) ||
+      o.customer?.email?.toLowerCase().includes(q);
+    return matchStatus && matchSearch;
   });
 
+  const formatINR = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
   return (
-    <div className={styles.container}>
-      <div className={styles.adminHeader}>
+    <div>
+      <div className={styles.pageHeader}>
         <div>
-          <h1 className="font-display" style={{ fontSize: '3rem', color: 'var(--accent-color)' }}>
-            SELLER DASHBOARD
-          </h1>
-          <p className={styles.subtext}>Manage customer orders, addresses & UPI payment verifications</p>
+          <h1 className={styles.pageTitle}>Orders</h1>
+          <p className={styles.pageSub}>{orders.length} total orders · {filtered.length} shown</p>
         </div>
-        <button onClick={fetchOrders} className="btn-outline">
-          🔄 Refresh Orders
-        </button>
+        <button onClick={fetchOrders} className={styles.btnOutline}>🔄 Refresh</button>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className={styles.controlsBar}>
-        <div className={styles.searchBox}>
-          <input
-            type="text"
-            placeholder="Search by Order ID, Customer Name, Phone, or UTR..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.filterGroup}>
-          <span>Filter Status:</span>
-          {['All', 'Pending Verification', 'Payment Verified', 'Shipped', 'Delivered'].map(st => (
-            <button
-              key={st}
-              className={`${styles.filterTab} ${filterStatus === st ? styles.activeTab : ''}`}
-              onClick={() => setFilterStatus(st)}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
+      {/* Controls */}
+      <div className={styles.controls}>
+        <input
+          type="text"
+          placeholder="Search by Order ID, name, phone, email, UTR..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className={styles.searchInput}
+        />
       </div>
 
-      {/* Orders List */}
+      <div className={styles.filterScroll} style={{ marginTop: '-0.25rem', marginBottom: '1rem' }}>
+        <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', alignSelf: 'center', whiteSpace: 'nowrap', paddingRight: '0.25rem' }}>Filter:</span>
+        {STATUSES.map(st => (
+          <button
+            key={st}
+            onClick={() => setFilterStatus(st)}
+            className={`${styles.filterBtn} ${filterStatus === st ? styles.filterBtnActive : ''}`}
+          >
+            {st === 'All' ? 'All' : st.split(' ')[0]}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
-        <div className={styles.loadingBox}>Loading incoming seller orders...</div>
-      ) : filteredOrders.length === 0 ? (
-        <div className={styles.emptyBox}>
-          <p>No orders found matching your filter criteria.</p>
-        </div>
+        <div className={styles.loading}>Loading orders...</div>
+      ) : filtered.length === 0 ? (
+        <div className={styles.empty}>No orders match your filters.</div>
       ) : (
-        <div className={styles.ordersList}>
-          {filteredOrders.map(order => (
+        <div>
+          {filtered.map(order => (
             <div key={order.orderId} className={styles.orderCard}>
-              <div className={styles.cardHeader}>
+              {/* Card Header */}
+              <div className={styles.orderCardHeader}>
                 <div>
                   <span className={styles.orderIdBadge}>#{order.orderId}</span>
                   <span className={styles.orderTime}>
                     {new Date(order.createdAt).toLocaleString('en-IN')}
                   </span>
                 </div>
-                <div className={styles.statusBox}>
-                  <select
-                    value={order.status}
-                    onChange={e => updateOrderStatus(order.orderId, e.target.value)}
-                    className={`${styles.statusSelect} ${styles['status_' + order.status.replace(/\s+/g, '')]}`}
-                  >
-                    <option value="Pending Verification">⏳ Pending Verification</option>
-                    <option value="Payment Verified">✅ Payment Verified</option>
-                    <option value="Shipped">🚚 Shipped</option>
-                    <option value="Delivered">🎉 Delivered</option>
-                  </select>
-                </div>
+                <select
+                  value={order.status}
+                  onChange={e => updateStatus(order, e.target.value)}
+                  className={styles.statusSelect}
+                >
+                  {STATUSES.filter(s => s !== 'All').map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className={styles.cardBody}>
-                {/* Customer Info */}
-                <div className={styles.infoCol}>
-                  <h4>👤 Customer Info</h4>
-                  <p><strong>Name:</strong> {order.customer?.fullName || 'N/A'}</p>
-                  <p><strong>Phone / WA:</strong> <a href={`https://wa.me/91${order.customer?.phone}`} target="_blank" rel="noreferrer" className={styles.waLink}>📱 {order.customer?.phone}</a></p>
-                  <p><strong>Email:</strong> {order.customer?.email}</p>
+              {/* Card Body */}
+              <div className={styles.orderBody}>
+                {/* Customer */}
+                <div className={styles.orderInfoCol}>
+                  <h4>👤 Customer</h4>
+                  <p><strong>{order.customer?.fullName || 'N/A'}</strong></p>
+                  <p>
+                    <a
+                      href={`https://wa.me/91${order.customer?.phone}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.waLink}
+                    >
+                      📱 {order.customer?.phone}
+                    </a>
+                  </p>
+                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem' }}>{order.customer?.email}</p>
                 </div>
 
-                {/* Delivery Address */}
-                <div className={styles.infoCol}>
+                {/* Address */}
+                <div className={styles.orderInfoCol}>
                   <h4>📍 Delivery Address</h4>
                   <p>{order.customer?.address}</p>
-                  <p>{order.customer?.city}, {order.customer?.state} - <strong>{order.customer?.pincode}</strong></p>
+                  <p>{order.customer?.city}, {order.customer?.state} — <strong>{order.customer?.pincode}</strong></p>
                 </div>
 
-                {/* Items Ordered */}
-                <div className={styles.infoCol}>
-                  <h4>⚽ Ordered Items ({order.items?.length})</h4>
+                {/* Items */}
+                <div className={styles.orderInfoCol}>
+                  <h4>⚽ Items ({order.items?.length || 0})</h4>
                   <ul className={styles.itemsList}>
-                    {order.items?.map((item, idx) => (
+                    {(order.items || []).map((item, idx) => (
                       <li key={idx}>
-                        <span>{item.title}</span> (Size: {item.size}) x {item.quantity} - ₹{item.price * item.quantity}
+                        {item.title} · {item.size} × {item.quantity} — {formatINR(item.price * item.quantity)}
+                        {(item.customName || item.customNumber) && (
+                          <span style={{ color: '#c4ff3d', marginLeft: '0.25rem' }}>
+                            [⚡ {item.customName} {item.customNumber ? '#' + item.customNumber : ''}]
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ul>
-                  <div className={styles.totalRow}>
-                    <span>Subtotal: ₹{order.subtotal || order.totalAmount}</span>
-                    {order.shippingFee !== undefined && <span>Shipping Fee: ₹{order.shippingFee}</span>}
-                    {order.codFee ? <span>COD Handling Fee: ₹{order.codFee}</span> : null}
-                    <div style={{ marginTop: '0.25rem' }}>
-                      <span>Total Order Value: </span>
-                      <strong className={styles.totalVal}>₹{order.totalAmount || order.subtotal}</strong>
-                    </div>
-                    {order.advanceAmount ? (
-                      <div style={{ color: '#c4ff3d', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                        ⚡ Advance Paid: ₹{order.advanceAmount}
-                      </div>
-                    ) : null}
-                    {order.balanceCOD > 0 ? (
-                      <div style={{ color: '#ffffff', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                        💵 Collect on Delivery: ₹{order.balanceCOD}
-                      </div>
-                    ) : null}
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+                    Subtotal: {formatINR(order.subtotal)} · Shipping: {formatINR(order.shippingFee)}
+                    {order.codFee > 0 && ` · COD Fee: ${formatINR(order.codFee)}`}
                   </div>
+                  <div style={{ marginTop: '0.25rem' }}>
+                    Total: <span className={styles.totalVal}>{formatINR(order.totalAmount)}</span>
+                  </div>
+                  {order.advanceAmount > 0 && (
+                    <div style={{ color: '#c4ff3d', fontSize: '0.78rem' }}>⚡ Advance Paid: {formatINR(order.advanceAmount)}</div>
+                  )}
+                  {order.balanceCOD > 0 && (
+                    <div style={{ fontSize: '0.78rem' }}>💵 Collect on Delivery: {formatINR(order.balanceCOD)}</div>
+                  )}
                 </div>
 
-                {/* Payment & UTR */}
-                <div className={styles.infoCol}>
-                  <h4>💳 Payment Details</h4>
-                  <p><strong>Method:</strong> UPI Scan & Pay</p>
+                {/* Payment */}
+                <div className={styles.orderInfoCol}>
+                  <h4>💳 Payment</h4>
+                  <p><strong>Method:</strong> {order.paymentMethod}</p>
                   <p><strong>UPI ID:</strong> dualturf@upi</p>
-                  <p><strong>UTR / Ref No:</strong> <code className={styles.utrCode}>{order.utr || 'Not Provided'}</code></p>
+                  <p><strong>UTR / Ref:</strong> <code className={styles.utrCode}>{order.utr || 'Not provided'}</code></p>
                   <a
                     href={`https://wa.me/91${order.customer?.phone}?text=${encodeURIComponent(`Hi ${order.customer?.fullName}, thank you for ordering from DualTurf! Your Order #${order.orderId} status is: ${order.status}.`)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-outline"
-                    style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.4rem 0.8rem' }}
+                    className={styles.btnOutline}
+                    style={{ marginTop: '0.75rem', fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}
                   >
-                    💬 Chat with Buyer on WA
+                    💬 WhatsApp Buyer
                   </a>
                 </div>
               </div>

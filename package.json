@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "studio": "sanity dev -p 3333",
+    "studio": "sanity dev --port 3333",
     "lint": "eslint"
   },
   "dependencies": {

@@ -240,8 +240,10 @@ ${isPartial ? `• 🟢 Advance Paid Online (Razorpay): ₹${advanceAmount} (${a
             amount: payableNow,
             receipt: generatedId,
             notes: {
+              orderId: generatedId,
               customer_name: formData.fullName,
               customer_phone: formData.phone,
+              customer_email: formData.email,
               is_partial: paymentMethod === 'partial_cod' ? 'yes' : 'no',
             },
           }),
