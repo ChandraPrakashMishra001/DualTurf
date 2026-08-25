@@ -87,12 +87,13 @@ async function sendOrderEmails(order) {
   `;
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"DualTurf Orders" <${smtpEmail}>`,
       to: smtpEmail,
       subject: `🛒 New Order #${order.orderId} - ${order.customer?.fullName || 'Customer'} (₹${order.totalAmount || 0})`,
       html: adminHtml,
     });
+    console.log(`✅ Admin order email sent successfully to ${smtpEmail} (ID: ${info.messageId})`);
   } catch (error) {
     console.error('❌ Admin email send failed:', error.message);
   }
@@ -140,12 +141,13 @@ async function sendOrderEmails(order) {
       </div>
     `;
     try {
-      await transporter.sendMail({
+      const custInfo = await transporter.sendMail({
         from: `"DualTurf" <${smtpEmail}>`,
         to: order.customer.email,
         subject: `⚽ Order Confirmed #${order.orderId} - DualTurf Jersey Store`,
         html: customerHtml,
       });
+      console.log(`✅ Customer confirmation email sent successfully to ${order.customer.email} (ID: ${custInfo.messageId})`);
     } catch (error) {
       console.error('❌ Customer email send failed:', error.message);
     }
