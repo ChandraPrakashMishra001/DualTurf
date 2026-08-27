@@ -330,26 +330,109 @@
 }
 
 /* ── Chart ────────────────────────────────────────────────── */
+.chartReadout {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.chartTooltipActive {
+  background: rgba(196, 255, 61, 0.12);
+  border: 1px solid rgba(196, 255, 61, 0.35);
+  color: #c4ff3d;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-block;
+  font-size: 0.78rem;
+}
+
+.chartTooltipIdle {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+}
+
+.chartContainer {
+  display: flex;
+  gap: 0.75rem;
+  height: 140px;
+  margin-top: 0.5rem;
+  position: relative;
+}
+
+.chartYAxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: monospace;
+  text-align: right;
+  min-width: 48px;
+  user-select: none;
+  padding-bottom: 2px;
+}
+
+.chartContentArea {
+  flex: 1;
+  position: relative;
+  height: 100%;
+}
+
+.chartGridLines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gridLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
 .chartWrap {
   display: flex;
   align-items: flex-end;
   gap: 3px;
-  height: 110px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.chartBarWrapper {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+  padding: 0 1px;
 }
 
 .chartBar {
-  flex: 1;
-  min-width: 8px;
-  background: rgba(196, 255, 61, 0.15);
+  width: 100%;
   border-radius: 3px 3px 0 0;
-  transition: background 0.15s;
-  position: relative;
+  transition: all 0.15s ease;
 }
 
-.chartBar:hover {
-  background: #c4ff3d;
+.chartBarWrapper:hover .chartBar,
+.chartBarActive .chartBar {
+  background: #c4ff3d !important;
+  box-shadow: 0 0 8px rgba(196, 255, 61, 0.6);
+  transform: scaleY(1.03);
+  transform-origin: bottom;
+}
+
+.chartXAxis {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 58px;
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.4rem;
+  user-select: none;
 }
 
 /* ── Table & Responsive Table Wrapper ─────────────────────── */

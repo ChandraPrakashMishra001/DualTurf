@@ -86,11 +86,30 @@ export async function sendOrderEmails(order) {
     </div>
   `;
 
+  const adminText = `
+⚽ NEW DUALTURF ORDER #${order.orderId}
+
+Customer: ${order.customer?.fullName || 'N/A'}
+Phone: ${order.customer?.phone || 'N/A'}
+Email: ${order.customer?.email || 'N/A'}
+
+Address:
+${order.customer?.address || ''}, ${order.customer?.city || ''}, ${order.customer?.state || ''} - ${order.customer?.pincode || ''}
+
+Items:
+${(order.items || []).map(it => `- ${it.title} (${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
+
+Total Amount: ₹${order.totalAmount || 0}
+Payment Method: ${order.paymentMethod || 'Online'}
+  `.trim();
+
   try {
     const info = await transporter.sendMail({
       from: `"DualTurf Orders" <${smtpEmail}>`,
       to: smtpEmail,
+      replyTo: order.customer?.email || smtpEmail,
       subject: `🛒 New Order #${order.orderId} - ${order.customer?.fullName || 'Customer'} (₹${order.totalAmount || 0})`,
+      text: adminText,
       html: adminHtml,
     });
     console.log(`✅ Admin order email sent successfully to ${smtpEmail} (ID: ${info.messageId})`);
@@ -99,6 +118,21 @@ export async function sendOrderEmails(order) {
   }
 
   if (order.customer?.email) {
+    const customerText = `
+Hi ${order.customer?.fullName || 'Customer'},
+
+Thank you for your order with DualTurf!
+Your Order #${order.orderId} has been confirmed.
+
+Order Summary:
+${(order.items || []).map(it => `- ${it.title} (${it.size}) x ${it.quantity} = ₹${it.price * it.quantity}`).join('\n')}
+
+Total: ₹${order.totalAmount || 0}
+Delivery Time: 3–5 business days.
+
+Need help? WhatsApp us at +91-7656072801 or visit https://www.dualturf.in
+    `.trim();
+
     const customerHtml = `
       <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#0d0d0d;color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #222;">
         <div style="background:#141414;padding:28px 32px;text-align:center;border-bottom:2px solid #c4ff3d;">
@@ -144,7 +178,9 @@ export async function sendOrderEmails(order) {
       const custInfo = await transporter.sendMail({
         from: `"DualTurf" <${smtpEmail}>`,
         to: order.customer.email,
+        replyTo: smtpEmail,
         subject: `⚽ Order Confirmed #${order.orderId} - DualTurf Jersey Store`,
+        text: customerText,
         html: customerHtml,
       });
       console.log(`✅ Customer confirmation email sent successfully to ${order.customer.email} (ID: ${custInfo.messageId})`);

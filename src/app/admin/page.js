@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [hoveredDay, setHoveredDay] = useState(null);
 
   const fetchData = useCallback(async () => {
     const token = getToken();
@@ -47,9 +48,11 @@ export default function AdminDashboard() {
 
   const formatINR = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
-  // Calculate chart bar heights
+  // Calculate chart metrics
   const chartData = stats?.revenueByDay || [];
   const maxRevenue = Math.max(...chartData.map(d => d.revenue), 1);
+  const total30dRevenue = chartData.reduce((sum, d) => sum + d.revenue, 0);
+  const peakDay = chartData.reduce((max, d) => (d.revenue > (max?.revenue || 0) ? d : max), null);
 
   return (
     <div>
@@ -102,24 +105,85 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Revenue Chart */}
+          {/* Enhanced Revenue Chart */}
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionTitle}>Revenue — Last 30 Days</span>
+              <div>
+                <span className={styles.sectionTitle}>Revenue — Last 30 Days</span>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', marginLeft: '0.75rem' }}>
+                  30D Total: <strong style={{ color: '#c4ff3d' }}>{formatINR(total30dRevenue)}</strong>
+                </span>
+              </div>
+
+              {/* Dynamic Readout */}
+              <div className={styles.chartReadout}>
+                {hoveredDay ? (
+                  <span className={styles.chartTooltipActive}>
+                    📅 {new Date(hoveredDay.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}: <strong>{formatINR(hoveredDay.revenue)}</strong>
+                  </span>
+                ) : peakDay && peakDay.revenue > 0 ? (
+                  <span className={styles.chartTooltipIdle}>
+                    ⭐ Peak: <strong style={{ color: '#c4ff3d' }}>{formatINR(peakDay.revenue)}</strong> on {new Date(peakDay.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </span>
+                ) : (
+                  <span className={styles.chartTooltipIdle}>Hover / tap any bar to see amount</span>
+                )}
+              </div>
             </div>
-            <div className={styles.chartWrap}>
-              {chartData.map((d) => (
-                <div
-                  key={d.date}
-                  title={`${d.date}: ₹${d.revenue.toLocaleString('en-IN')}`}
-                  className={styles.chartBar}
-                  style={{
-                    height: `${Math.max(4, (d.revenue / maxRevenue) * 100)}%`,
-                    background: d.revenue > 0 ? 'rgba(196,255,61,0.5)' : 'rgba(255,255,255,0.05)',
-                  }}
-                />
-              ))}
+
+            {/* Y-Axis Value Labels + Bars Container */}
+            <div className={styles.chartContainer}>
+              <div className={styles.chartYAxis}>
+                <span>{formatINR(maxRevenue)}</span>
+                <span>{formatINR(Math.round(maxRevenue / 2))}</span>
+                <span>₹0</span>
+              </div>
+
+              <div className={styles.chartContentArea}>
+                <div className={styles.chartGridLines}>
+                  <div className={styles.gridLine} style={{ top: '0%' }} />
+                  <div className={styles.gridLine} style={{ top: '50%' }} />
+                  <div className={styles.gridLine} style={{ top: '100%' }} />
+                </div>
+
+                <div className={styles.chartWrap} onMouseLeave={() => setHoveredDay(null)}>
+                  {chartData.map((d) => {
+                    const isHovered = hoveredDay?.date === d.date;
+                    const heightPercent = Math.max(d.revenue > 0 ? 8 : 3, (d.revenue / maxRevenue) * 100);
+                    return (
+                      <div
+                        key={d.date}
+                        className={`${styles.chartBarWrapper} ${isHovered ? styles.chartBarActive : ''}`}
+                        onMouseEnter={() => setHoveredDay(d)}
+                        onClick={() => setHoveredDay(d)}
+                        title={`${d.date}: ${formatINR(d.revenue)}`}
+                      >
+                        <div
+                          className={styles.chartBar}
+                          style={{
+                            height: `${heightPercent}%`,
+                            background: d.revenue > 0
+                              ? isHovered ? '#c4ff3d' : 'linear-gradient(180deg, #c4ff3d 0%, rgba(196,255,61,0.3) 100%)'
+                              : 'rgba(255,255,255,0.05)',
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
+
+            {/* X-Axis Date Milestone Labels */}
+            {chartData.length > 0 && (
+              <div className={styles.chartXAxis}>
+                <span>{new Date(chartData[0]?.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                <span>{new Date(chartData[Math.floor(chartData.length / 3)]?.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                <span>{new Date(chartData[Math.floor((chartData.length * 2) / 3)]?.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                <span style={{ color: '#c4ff3d', fontWeight: 600 }}>Today</span>
+              </div>
+            )}
+
             {chartData.length === 0 && (
               <div className={styles.empty}>No order data yet</div>
             )}
