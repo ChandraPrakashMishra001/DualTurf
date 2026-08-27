@@ -20,6 +20,18 @@ export const CATEGORIES = [
     name: 'INTERNATIONAL KITS',
     slug: 'international-kits',
     image: '/images/MCFC.PNG'
+  },
+  {
+    id: 'jerseys-with-shorts',
+    name: 'SETS (JERSEY WITH SHORTS)',
+    slug: 'jerseys-with-shorts',
+    image: '/images/RMFC.PNG'
+  },
+  {
+    id: 'retro-classics',
+    name: 'RETRO CLASSICS',
+    slug: 'retro-classics',
+    image: '/images/MCFC.PNG'
   }
 ];
 

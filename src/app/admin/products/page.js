@@ -8,25 +8,22 @@ function getToken() {
 }
 
 const CATEGORIES = [
-  { title: 'Club Kits', value: 'club' },
-  { title: 'International Kits', value: 'international' },
-  { title: 'Retro Classics', value: 'retro' },
-  { title: 'Fan Version', value: 'fan' },
-  { title: 'Player Version', value: 'player' },
-  { title: 'Special Edition', value: 'special' },
+  { title: 'Club Kits (2026-27)', value: '2026-27-season-kits' },
+  { title: 'International Kits', value: 'international-kits' },
+  { title: 'Sets (Jersey with Shorts)', value: 'jerseys-with-shorts' },
+  { title: 'Retro Classics', value: 'retro-classics' },
 ];
 
 const TYPES = [
-  { title: 'Fan Version (Regular)', value: 'fan' },
-  { title: 'Player Version (Slim Fit)', value: 'player' },
-  { title: 'Master Copy', value: 'master' },
+  { title: 'Master Version', value: 'master' },
+  { title: 'Player Version', value: 'player' },
 ];
 
 const ALL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
 const EMPTY_FORM = {
   name: '', price: '', originalPrice: '', team: '',
-  category: 'club', type: 'fan', sleeve: 'short',
+  category: '2026-27-season-kits', type: 'master', sleeve: 'short',
   featured: false, inStock: true, description: '',
   sizes: ['S', 'M', 'L', 'XL', 'XXL'],
 };
@@ -441,7 +438,7 @@ export default function AdminProductsPage() {
             <div className={styles.formGrid}>
               <div className={`${styles.formField} ${styles.fullWidth}`}>
                 <label className={styles.formLabel}>Product Name *</label>
-                <input className={styles.formInput} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Real Madrid Home Fan Version" />
+                <input className={styles.formInput} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Real Madrid Home - Master Version" />
               </div>
               <div className={styles.formField}>
                 <label className={styles.formLabel}>Price (₹) *</label>

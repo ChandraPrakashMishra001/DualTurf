@@ -79,8 +79,19 @@ export async function getProductBySlug(slug) {
 
 // Fetch products by category
 export async function getProductsByCategory(category) {
+  let catList = [category];
+  if (category === '2026-27-season-kits' || category === 'club' || category === 'club-kits') {
+    catList = ['2026-27-season-kits', 'club', 'club-kits'];
+  } else if (category === 'international-kits' || category === 'international') {
+    catList = ['international-kits', 'international'];
+  } else if (category === 'jerseys-with-shorts' || category === 'shorts') {
+    catList = ['jerseys-with-shorts', 'shorts'];
+  } else if (category === 'retro-classics' || category === 'retro') {
+    catList = ['retro-classics', 'retro'];
+  }
+
   return client.fetch(`
-    *[_type == "product" && category == $category && inStock != false] | order(_createdAt desc) {
+    *[_type == "product" && category in $catList && inStock != false] | order(_createdAt desc) {
       _id,
       "id": slug.current,
       "slug": slug.current,
@@ -96,8 +107,9 @@ export async function getProductsByCategory(category) {
       description,
       sizes,
       "image": images[0].asset->url,
+      "images": images[].asset->url,
     }
-  `, { category }, fetchOptions)
+  `, { catList }, fetchOptions)
 }
 
 // Fetch featured products (for homepage Latest Drop section)
