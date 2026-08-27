@@ -917,17 +917,19 @@
 }
 
 /* ── Order card ───────────────────────────────────────────── */
+/* ── Order card (Executive Layout) ─────────────────────── */
 .orderCard {
-  background: #111111;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  transition: border-color 0.2s;
+  background: #0e0e0e;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 1.35rem;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .orderCard:hover {
-  border-color: rgba(196, 255, 61, 0.2);
+  border-color: rgba(196, 255, 61, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .orderCardHeader {
@@ -935,83 +937,277 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.85rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.orderHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
 .orderIdBadge {
   font-family: monospace;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #c4ff3d;
-  font-weight: 700;
+  font-weight: 800;
+  background: rgba(196, 255, 61, 0.1);
+  border: 1px solid rgba(196, 255, 61, 0.25);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
 }
 
 .orderTime {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.35);
-  margin-left: 0.5rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.orderBody {
+.orderHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.btnWhatsApp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(37, 211, 102, 0.12);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  padding: 0.45rem 0.85rem;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btnWhatsApp:hover {
+  background: #25d366;
+  color: #000000;
+}
+
+/* ── 2-Column Order Content Grid ──────────────────────────── */
+.orderGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.25rem;
 }
 
-.orderInfoCol h4 {
+@media (max-width: 840px) {
+  .orderGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* ── Items & Financials Section (Left) ────────────────────── */
+.orderItemsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.orderSectionTitle {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.45);
-  margin-bottom: 0.45rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.orderInfoCol p {
-  font-size: 0.825rem;
-  color: rgba(255, 255, 255, 0.75);
-  margin-bottom: 0.25rem;
-  line-height: 1.4;
+.orderItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.waLink {
-  color: #c4ff3d;
-  text-decoration: none;
-  font-weight: 600;
+.orderItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
 }
 
-.waLink:hover {
-  text-decoration: underline;
-}
-
-.itemsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.orderItemInfo {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
 }
 
-.itemsList li {
+.orderItemTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.orderItemTags {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.orderPill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.orderPrintPill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(196, 255, 61, 0.12);
+  color: #c4ff3d;
+  border: 1px solid rgba(196, 255, 61, 0.3);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.orderItemPrice {
+  text-align: right;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #c4ff3d;
+  white-space: nowrap;
+}
+
+/* Financial Box */
+.orderFinBox {
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.orderFinRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.utrCode {
+.orderFinDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.3rem 0;
+}
+
+.orderFinTotalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.orderFinTotalVal {
+  color: #c4ff3d;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.orderAdvanceBanner {
+  background: rgba(196, 255, 61, 0.08);
+  border: 1px solid rgba(196, 255, 61, 0.25);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* ── Customer & Logistics Sidebar (Right) ─────────────────── */
+.orderSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.orderDetailBox {
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.orderDetailBox h4 {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.orderDetailName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.orderDetailText {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.45;
+}
+
+.orderDetailSub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.orderPincodeBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-weight: 700;
+  font-family: monospace;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.utrBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: monospace;
   background: rgba(196, 255, 61, 0.08);
   color: #c4ff3d;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-}
-
-.totalVal {
-  color: #c4ff3d;
-  font-size: 1.05rem;
-  font-weight: 700;
+  border: 1px solid rgba(196, 255, 61, 0.25);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  word-break: break-all;
 }
 
 .formActions {
