@@ -362,46 +362,19 @@ export default function CollectionClient({
                         alt={product.title || product.name}
                         className="product-card-img"
                       />
-                      {product.originalPrice && (
-                        <span className={styles.saleBadge}>SALE</span>
-                      )}
-                      {isSet && (
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: '1rem',
-                            right: '1rem',
-                            background: '#c4ff3d',
-                            color: '#000000',
-                            fontSize: '0.65rem',
-                            fontWeight: 800,
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          SET (WITH SHORTS)
-                        </span>
-                      )}
-                      {isFullSleeve && (
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: isSet ? '2.6rem' : '1rem',
-                            right: '1rem',
-                            background: 'rgba(0,0,0,0.85)',
-                            color: '#c4ff3d',
-                            border: '1px solid rgba(196,255,61,0.4)',
-                            fontSize: '0.65rem',
-                            fontWeight: 800,
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          FULL SLEEVE
-                        </span>
-                      )}
+
+                      {/* Stacked Top Badges (No overlap on mobile) */}
+                      <div className={styles.cardBadgeStack}>
+                        {product.originalPrice && (
+                          <span className={styles.saleBadge}>SALE</span>
+                        )}
+                        {isSet && (
+                          <span className={styles.setBadge}>SET + SHORTS</span>
+                        )}
+                        {isFullSleeve && (
+                          <span className={styles.sleeveBadge}>FULL SLEEVE</span>
+                        )}
+                      </div>
                     </Link>
                     <div className={styles.info}>
                       <Link href={`/products/${product.slug}`}>

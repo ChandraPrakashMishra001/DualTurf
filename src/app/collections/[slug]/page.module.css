@@ -228,17 +228,66 @@
   }
 }
 
-.saleBadge {
+.cardBadgeStack {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 0.6rem;
+  left: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.saleBadge {
   background-color: var(--accent-color);
   color: #000000;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  padding: 0.25rem 0.625rem;
+  padding: 0.2rem 0.5rem;
   border-radius: var(--radius-sm);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.setBadge {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #c4ff3d;
+  border: 1px solid rgba(196, 255, 61, 0.5);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.sleeveBadge {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.05em;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+  .cardBadgeStack {
+    top: 0.4rem;
+    left: 0.4rem;
+    gap: 0.25rem;
+  }
+  .saleBadge, .setBadge, .sleeveBadge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+  }
 }
 
 .info {
